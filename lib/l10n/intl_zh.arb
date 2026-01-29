@@ -1,0 +1,15 @@
+{
+    "theme": "背景设置",
+    "themeLight": "浅色背景",
+    "themeDark": "深色背景",
+    "themeSystem": "跟随系统",
+    "setting": "设置",
+    "locale": "语言",
+    "localeZh": "中文",
+    "localeEn": "英文",
+    "asr": "语音识别",
+    "translation": "实时翻译",
+    "home": "首页",
+    "me": "我的",
+    "general": "通用设置"
+}

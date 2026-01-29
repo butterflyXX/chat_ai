@@ -1,0 +1,15 @@
+{
+    "theme": "Background",
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "themeSystem": "System",
+    "setting": "Setting",
+    "locale": "Locale",
+    "localeZh": "Chinese",
+    "localeEn": "English",
+    "asr": "ASR",
+    "translation": "Translation",
+    "home": "Home",
+    "me": "Me",
+    "general": "General"
+}
