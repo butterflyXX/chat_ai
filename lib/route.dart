@@ -1,3 +1,4 @@
+import 'package:chat_ai/feat/chat/chat_page.dart';
 import 'package:chat_ai/feat/main/main_page.dart';
 import 'package:chat_ai/feat/me/setting_locale_page.dart';
 import 'package:chat_ai/feat/me/setting_theme_page.dart';
@@ -43,4 +44,13 @@ class SettingLocaleRoute extends GoRouteData with $SettingLocaleRoute {
 
   @override
   Widget build(BuildContext context, GoRouterState state) => const SettingLocalePage();
+}
+
+@TypedGoRoute<ChatRoute>(path: '/chat')
+class ChatRoute extends GoRouteData with $ChatRoute {
+  final int aiServiceType;
+  const ChatRoute({required this.aiServiceType});
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) => ChatPage(aiServiceType: aiServiceType);
 }

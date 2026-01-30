@@ -118,6 +118,11 @@ class S {
   String get general {
     return Intl.message('General', name: 'general', desc: '', args: []);
   }
+
+  /// `Spark`
+  String get spark {
+    return Intl.message('Spark', name: 'spark', desc: '', args: []);
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<S> {

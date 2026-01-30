@@ -13,6 +13,12 @@ class _HomePageState extends ConsumerState<HomePage> {
     return Scaffold(
       appBar: CAAppBar.commonAppbar(context, title: S.of(context).home),
       body: Center(child: Text(S.of(context).home)),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          context.push(ChatRoute(aiServiceType: 0).location);
+        },
+        child: Icon(Icons.chat),
+      ),
     );
   }
 }

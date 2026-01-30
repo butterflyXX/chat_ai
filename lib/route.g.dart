@@ -10,6 +10,7 @@ List<RouteBase> get $appRoutes => [
   $mainRoute,
   $settingThemeRoute,
   $settingLocaleRoute,
+  $chatRoute,
 ];
 
 RouteBase get $mainRoute =>
@@ -72,6 +73,36 @@ mixin $SettingLocaleRoute on GoRouteData {
 
   @override
   String get location => GoRouteData.$location('/setting/locale');
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
+
+RouteBase get $chatRoute =>
+    GoRouteData.$route(path: '/chat', factory: $ChatRoute._fromState);
+
+mixin $ChatRoute on GoRouteData {
+  static ChatRoute _fromState(GoRouterState state) => ChatRoute(
+    aiServiceType: int.parse(state.uri.queryParameters['ai-service-type']!),
+  );
+
+  ChatRoute get _self => this as ChatRoute;
+
+  @override
+  String get location => GoRouteData.$location(
+    '/chat',
+    queryParams: {'ai-service-type': _self.aiServiceType.toString()},
+  );
 
   @override
   void go(BuildContext context) => context.go(location);

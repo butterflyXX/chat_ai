@@ -1,7 +1,20 @@
 import 'package:logger/logger.dart';
+import 'dart:developer' as developer;
+
+class _DeveloperConsoleOutput extends LogOutput {
+  @override
+  void output(OutputEvent event) {
+    for (var line in event.lines) {
+      developer.log(line);
+    }
+  }
+}
 
 class LogUtil {
-  static final _logger = Logger(printer: PrettyPrinter(methodCount: 0, errorMethodCount: 0));
+  static final _logger = Logger(
+    printer: PrettyPrinter(methodCount: 0, errorMethodCount: 0),
+    output: _DeveloperConsoleOutput(),
+  );
 
   /// Debug 日志
   static void d(dynamic obj) {
