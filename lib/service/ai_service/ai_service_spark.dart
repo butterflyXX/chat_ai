@@ -8,7 +8,7 @@ import 'package:web_socket_channel/io.dart';
 
 export 'package:chat_ai/service/ai_service/ai_service_base.dart';
 
-class ChatAiService extends AiServiceBase {
+class ChatAiServiceSpark extends AiServiceBase {
   final wsParam = SparkWsParam();
 
   @override
@@ -59,6 +59,7 @@ class ChatAiService extends AiServiceBase {
       "payload": {
         "message": {
           "text": [
+            {"role": "system", "content": "使用中文回答,你现在是高级flutter开发工程师,当前时间是${DateTime.now().millisecondsSinceEpoch}"},
             {"role": "user", "content": query},
           ],
         },

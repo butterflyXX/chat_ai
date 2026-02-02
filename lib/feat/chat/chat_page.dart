@@ -1,4 +1,5 @@
 import 'package:chat_ai/common/common.dart';
+import 'package:chat_ai/feat/chat/chat_item.dart';
 import 'package:chat_ai/service/ai_service/ai_service_spark.dart';
 
 enum AiServiceType {
@@ -8,7 +9,7 @@ enum AiServiceType {
   const AiServiceType(this.value);
 
   AiServiceBase get service => switch (this) {
-    AiServiceType.spark => ChatAiService(),
+    AiServiceType.spark => ChatAiServiceSpark(),
   };
 
   static AiServiceType fromValue(int value) {
@@ -54,15 +55,17 @@ class _ChatPageState extends ConsumerState<ChatPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: CAAppBar.commonAppbar(context, title: aiServiceType.displayName(context)),
-      body: ListView.builder(
+      body: ListView.separated(
+        padding: EdgeInsets.only(left: 16.w, right: 16.w, bottom: ScreenUtil().bottomBarHeight + 16.w),
         itemBuilder: (context, index) {
-          return Text(_messages[index].message, style: TextStyleTheme.regular14);
+          return ChatItemAiWidget(message: _messages[index]);
         },
         itemCount: _messages.length,
+        separatorBuilder: (context, index) => SizedBox(height: 16.w),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          aiService.sendMessage('你叫什么名字?');
+          aiService.sendMessage('帮我写一篇2000字作文,题目随意');
         },
         child: Icon(Icons.send),
       ),
