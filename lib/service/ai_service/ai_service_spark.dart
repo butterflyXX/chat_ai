@@ -14,7 +14,7 @@ class ChatAiServiceSpark extends AiServiceBase {
 
   @override
   Future<void> sendMessage(String message) async {
-    messageBuffer.clear();
+    await super.sendMessage(message);
     final channel = IOWebSocketChannel.connect(wsParam.createUrl(), pingInterval: const Duration(seconds: 5));
 
     // 连接建立后发送请求
@@ -33,8 +33,7 @@ class ChatAiServiceSpark extends AiServiceBase {
           final choices = data['payload']['choices'];
           final status = AiMessageState.fromValue(choices['status']);
           final content = choices['text'][0]['content'];
-          messageBuffer.write(content);
-          streamcontroller.add(AiMessageModel(state: status, message: messageBuffer.toString()));
+          reseveMessage(status, content);
 
           if (status == AiMessageState.end) {
             LogUtil.d('\n#### 关闭会话');
@@ -61,7 +60,7 @@ class ChatAiServiceSpark extends AiServiceBase {
         "message": {
           "text": [
             {"role": "system", "content": "使用中文回答,你现在是高级flutter开发工程师,当前时间是${DateTime.now().millisecondsSinceEpoch}"},
-            {"role": "user", "content": query},
+            ...historyMessages.map((e) => {'role': e.role.name, 'content': e.message}),
           ],
         },
       },

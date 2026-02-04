@@ -54,14 +54,13 @@ class CodeElementBuilder extends MarkdownElementBuilder {
   }
 }
 
-class ChatItemAiWidget extends StatelessWidget {
+class ChatAiWidget extends StatelessWidget {
   final AiMessageModel message;
-  const ChatItemAiWidget({required this.message, super.key});
+  const ChatAiWidget({required this.message, super.key});
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    // return Container();
     return Container(
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(color: context.appTheme.fillsPrimary, borderRadius: BorderRadius.circular(16.w)),
@@ -106,6 +105,29 @@ class ChatItemAiWidget extends StatelessWidget {
         ),
         builders: {'pre': CodeElementBuilder(isDark: isDark, appTheme: context.appTheme)},
       ),
+    );
+  }
+}
+
+class ChatUserWidget extends StatelessWidget {
+  final AiMessageModel message;
+  const ChatUserWidget({required this.message, super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        const Spacer(),
+        Container(
+          padding: EdgeInsets.all(16.w),
+          decoration: BoxDecoration(color: context.appTheme.highlightGreen, borderRadius: BorderRadius.circular(16.w)),
+          constraints: BoxConstraints(maxWidth: 1.sw * 0.75, minWidth: 1.sw * 0.2),
+          child: SelectableText(
+            message.message,
+            style: TextStyleTheme.regular14.copyWith(color: context.appTheme.textPrimary),
+          ),
+        ),
+      ],
     );
   }
 }

@@ -12,7 +12,7 @@ class ChatAiServiceQwen extends AiServiceBase {
 
   @override
   Future<void> sendMessage(String message) async {
-    messageBuffer.clear();
+    await super.sendMessage(message);
     _dio.options.headers['Authorization'] = 'Bearer $qwenAppKey';
     _dio.options.responseType = ResponseType.stream;
     final response = await _dio.post(
@@ -21,7 +21,7 @@ class ChatAiServiceQwen extends AiServiceBase {
         'model': 'qwen-plus',
         "stream": true,
         'messages': [
-          {'role': 'user', 'content': message},
+          ...historyMessages.map((e) => {'role': e.role.name, 'content': e.message}),
         ],
       },
     );
@@ -29,7 +29,7 @@ class ChatAiServiceQwen extends AiServiceBase {
   }
 
   void processQwenStream(Stream<List<int>> byteStream) {
-    streamcontroller.add(AiMessageModel(state: AiMessageState.start, message: messageBuffer.toString()));
+    reseveMessage(AiMessageState.start, '');
     // 1. 将字节流转换为字符串行流
     final lineStream = utf8.decoder
         .bind(byteStream) // 字节转字符串
@@ -42,7 +42,7 @@ class ChatAiServiceQwen extends AiServiceBase {
       // 3. 检查是否结束
       // if (line.startsWith("data: ")) {
       if (line.startsWith("data: [DONE]")) {
-        streamcontroller.add(AiMessageModel(state: AiMessageState.end, message: messageBuffer.toString()));
+        reseveMessage(AiMessageState.end, '');
         return;
       }
 
@@ -58,10 +58,7 @@ class ChatAiServiceQwen extends AiServiceBase {
             final delta = choices[0]['delta'];
             if (delta != null && delta['content'] != null) {
               String content = delta['content'];
-
-              // 关键：将增量内容拼接到 UI
-              messageBuffer.write(content);
-              streamcontroller.add(AiMessageModel(state: AiMessageState.streaming, message: messageBuffer.toString()));
+              reseveMessage(AiMessageState.streaming, content);
             }
           }
         } catch (e) {

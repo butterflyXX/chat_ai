@@ -37,23 +37,13 @@ class ChatPage extends ConsumerStatefulWidget {
 class _ChatPageState extends ConsumerState<ChatPage> {
   late final aiServiceType = AiServiceType.fromValue(widget.aiServiceType);
   late final aiService = aiServiceType.service;
-  final List<AiMessageModel> _messages = [];
   final ScrollController _scrollController = ScrollController();
 
   @override
   initState() {
     super.initState();
     aiService.stream.listen((message) {
-      setState(() {
-        switch (message.state) {
-          case AiMessageState.start:
-            _messages.add(message);
-          case AiMessageState.streaming:
-          case AiMessageState.end:
-            _messages.removeLast();
-            _messages.add(message);
-        }
-      });
+      setState(() {});
       WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
         _scrollController.animateTo(
           _scrollController.position.maxScrollExtent,
@@ -75,9 +65,13 @@ class _ChatPageState extends ConsumerState<ChatPage> {
               controller: _scrollController,
               padding: EdgeInsets.only(left: 16.w, right: 16.w, bottom: 16.w),
               itemBuilder: (context, index) {
-                return ChatItemAiWidget(message: _messages[index]);
+                if (aiService.historyMessages[index].role == AiMessageRole.user) {
+                  return ChatUserWidget(message: aiService.historyMessages[index]);
+                } else {
+                  return ChatAiWidget(message: aiService.historyMessages[index]);
+                }
               },
-              itemCount: _messages.length,
+              itemCount: aiService.historyMessages.length,
               separatorBuilder: (context, index) => SizedBox(height: 16.w),
             ),
           ),
