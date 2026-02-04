@@ -15,7 +15,7 @@ class _ChatBottomBarState extends ConsumerState<ChatBottomBar> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: context.appTheme.keyBoardBackgroundColor,
+      color: context.appTheme.fillsSecondary,
       padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 8.w),
       child: Column(
         mainAxisSize: MainAxisSize.min,
