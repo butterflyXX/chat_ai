@@ -36,8 +36,8 @@ class ColorsTheme {
   static const Color separatorsOnlightSecondary = Color(0xFFD1D5DB);
 
   // --- 键盘背景色 ---
-  static const Color keyBoardBackgroundDark = Color(0xFF2A2A2B);
-  static const Color keyBoardBackgroundLight = Color(0xFFC9CDD3);
+  static const Color keyBoardBackgroundDark = Color(0xFF2F2F30);
+  static const Color keyBoardBackgroundLight = Color(0xFFD1D3D8);
 
   // --- 强调色 (Highlights) ---
   // 采用更加深邃、饱和度适中的颜色
