@@ -123,6 +123,11 @@ class S {
   String get spark {
     return Intl.message('Spark', name: 'spark', desc: '', args: []);
   }
+
+  /// `Qwen`
+  String get qwen {
+    return Intl.message('Qwen', name: 'qwen', desc: '', args: []);
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<S> {

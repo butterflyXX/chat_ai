@@ -29,6 +29,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "localeEn": MessageLookupByLibrary.simpleMessage("英文"),
     "localeZh": MessageLookupByLibrary.simpleMessage("中文"),
     "me": MessageLookupByLibrary.simpleMessage("我的"),
+    "qwen": MessageLookupByLibrary.simpleMessage("通义千问"),
     "setting": MessageLookupByLibrary.simpleMessage("设置"),
     "spark": MessageLookupByLibrary.simpleMessage("星火认知"),
     "theme": MessageLookupByLibrary.simpleMessage("背景设置"),

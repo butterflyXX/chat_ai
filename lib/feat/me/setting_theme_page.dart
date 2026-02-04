@@ -20,7 +20,7 @@ class _SettingThemePageState extends ConsumerState<SettingThemePage> {
   }
 
   Widget _buildThemeItem(ThemeMode mode) {
-    return SettingSelectItemWidget(
+    return SettingChooseItemWidget(
       title: mode.displayName,
       value: ref.watch(themeStateProvider) == mode,
       onTap: () => ref.read(themeStateProvider.notifier).setThemeState(mode),

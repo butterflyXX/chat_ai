@@ -20,7 +20,7 @@ class _SettingLocalePageState extends ConsumerState<SettingLocalePage> {
   }
 
   Widget _buildLocaleItem(LocaleType locale) {
-    return SettingSelectItemWidget(
+    return SettingChooseItemWidget(
       title: locale.originalName,
       value: ref.watch(localeStateProvider) == locale,
       onTap: () => ref.read(localeStateProvider.notifier).setLocale(locale),

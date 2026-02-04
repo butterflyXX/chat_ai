@@ -7,6 +7,7 @@ import 'package:crypto/crypto.dart';
 import 'package:web_socket_channel/io.dart';
 
 export 'package:chat_ai/service/ai_service/ai_service_base.dart';
+import 'package:chat_ai/app_key.dart';
 
 class ChatAiServiceSpark extends AiServiceBase {
   final wsParam = SparkWsParam();
@@ -17,7 +18,7 @@ class ChatAiServiceSpark extends AiServiceBase {
     final channel = IOWebSocketChannel.connect(wsParam.createUrl(), pingInterval: const Duration(seconds: 5));
 
     // 连接建立后发送请求
-    channel.sink.add(jsonEncode(_genParams(appId: wsParam.appId, query: message, domain: wsParam.domain)));
+    channel.sink.add(jsonEncode(_genParams(appId: sparkAppId, query: message, domain: wsParam.domain)));
 
     // 监听消息
     channel.stream.listen(
@@ -69,9 +70,6 @@ class ChatAiServiceSpark extends AiServiceBase {
 }
 
 class SparkWsParam {
-  final String appId = '28991844';
-  final String apiKey = '2cfb41b426628d73ba16640d50279bc9';
-  final String apiSecret = 'ZTY2OThlYTc5NzU5NmI1MDQ1ZGFhOTkz';
   final String gptUrl = 'wss://spark-api.xf-yun.com/v1.1/chat';
   final String domain = 'lite';
 
@@ -91,13 +89,13 @@ class SparkWsParam {
         'GET $path HTTP/1.1';
 
     // HMAC-SHA256 加密
-    final hmacSha256 = Hmac(sha256, utf8.encode(apiSecret));
+    final hmacSha256 = Hmac(sha256, utf8.encode(sparkApiSecret));
     final digest = hmacSha256.convert(utf8.encode(signatureOrigin));
     final signatureBase64 = base64Encode(digest.bytes);
 
     // authorization
     final authorizationOrigin =
-        'api_key="$apiKey", algorithm="hmac-sha256", headers="host date request-line", signature="$signatureBase64"';
+        'api_key="$sparkApiKey", algorithm="hmac-sha256", headers="host date request-line", signature="$signatureBase64"';
     final authorization = base64Encode(utf8.encode(authorizationOrigin));
 
     // 组合 URL 参数，直接使用 Uri.replace 防止出现重复 ? 或异常端口

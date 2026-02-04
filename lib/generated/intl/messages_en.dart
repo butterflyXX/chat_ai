@@ -29,6 +29,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "localeEn": MessageLookupByLibrary.simpleMessage("English"),
     "localeZh": MessageLookupByLibrary.simpleMessage("Chinese"),
     "me": MessageLookupByLibrary.simpleMessage("Me"),
+    "qwen": MessageLookupByLibrary.simpleMessage("Qwen"),
     "setting": MessageLookupByLibrary.simpleMessage("Setting"),
     "spark": MessageLookupByLibrary.simpleMessage("Spark"),
     "theme": MessageLookupByLibrary.simpleMessage("Background"),

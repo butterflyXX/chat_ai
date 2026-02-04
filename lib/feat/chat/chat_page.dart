@@ -1,16 +1,19 @@
 import 'package:chat_ai/common/common.dart';
 import 'package:chat_ai/feat/chat/chat_input_bar/chat_input_bar.dart';
 import 'package:chat_ai/feat/chat/chat_item.dart';
+import 'package:chat_ai/service/ai_service/ai_service_qwen.dart';
 import 'package:chat_ai/service/ai_service/ai_service_spark.dart';
 
 enum AiServiceType {
-  spark(0);
+  spark(0),
+  qwen(1);
 
   final int value;
   const AiServiceType(this.value);
 
   AiServiceBase get service => switch (this) {
     AiServiceType.spark => ChatAiServiceSpark(),
+    AiServiceType.qwen => ChatAiServiceQwen(),
   };
 
   static AiServiceType fromValue(int value) {
@@ -19,6 +22,7 @@ enum AiServiceType {
 
   String displayName(BuildContext context) => switch (this) {
     AiServiceType.spark => S.of(context).spark,
+    AiServiceType.qwen => S.of(context).qwen,
   };
 }
 
