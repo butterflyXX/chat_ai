@@ -35,6 +35,10 @@ class ColorsTheme {
   static const Color separatorsOnlightPrimary = Color(0xFFE5E7EB);
   static const Color separatorsOnlightSecondary = Color(0xFFD1D5DB);
 
+  // --- 键盘背景色 ---
+  static const Color keyBoardBackgroundDark = Color(0xFF2A2A2B);
+  static const Color keyBoardBackgroundLight = Color(0xFFC9CDD3);
+
   // --- 强调色 (Highlights) ---
   // 采用更加深邃、饱和度适中的颜色
   static const Color highlightBlue = Color(0xFF3B82F6); // 典型 AI 蓝色
@@ -60,6 +64,7 @@ class AppThemeExtension extends ThemeExtension<AppThemeExtension> {
     required this.highlightGreen,
     required this.highlightOrange,
     required this.highlightProrights,
+    required this.keyBoardBackgroundColor,
   });
 
   final Color backgroundColor;
@@ -76,7 +81,7 @@ class AppThemeExtension extends ThemeExtension<AppThemeExtension> {
   final Color highlightGreen;
   final Color highlightOrange;
   final Color highlightProrights;
-
+  final Color keyBoardBackgroundColor;
   // 浅色主题
   static const light = AppThemeExtension(
     backgroundColor: ColorsTheme.backgroundLight,
@@ -93,6 +98,7 @@ class AppThemeExtension extends ThemeExtension<AppThemeExtension> {
     highlightGreen: ColorsTheme.highlightGreen,
     highlightOrange: ColorsTheme.highlightOrange,
     highlightProrights: ColorsTheme.highlightProrights,
+    keyBoardBackgroundColor: ColorsTheme.keyBoardBackgroundLight,
   );
 
   // 暗色主题
@@ -111,6 +117,7 @@ class AppThemeExtension extends ThemeExtension<AppThemeExtension> {
     highlightGreen: ColorsTheme.highlightGreen,
     highlightOrange: ColorsTheme.highlightOrange,
     highlightProrights: ColorsTheme.highlightProrights,
+    keyBoardBackgroundColor: ColorsTheme.keyBoardBackgroundDark,
   );
 
   @override
@@ -129,6 +136,7 @@ class AppThemeExtension extends ThemeExtension<AppThemeExtension> {
     Color? highlightGreen,
     Color? highlightOrange,
     Color? highlightProrights,
+    Color? keyBoardBackgroundColor,
   }) {
     return AppThemeExtension(
       backgroundColor: backgroundColor ?? this.backgroundColor,
@@ -145,6 +153,7 @@ class AppThemeExtension extends ThemeExtension<AppThemeExtension> {
       highlightGreen: highlightGreen ?? this.highlightGreen,
       highlightOrange: highlightOrange ?? this.highlightOrange,
       highlightProrights: highlightProrights ?? this.highlightProrights,
+      keyBoardBackgroundColor: keyBoardBackgroundColor ?? this.keyBoardBackgroundColor,
     );
   }
 
@@ -168,6 +177,7 @@ class AppThemeExtension extends ThemeExtension<AppThemeExtension> {
       highlightGreen: Color.lerp(highlightGreen, other.highlightGreen, t)!,
       highlightOrange: Color.lerp(highlightOrange, other.highlightOrange, t)!,
       highlightProrights: Color.lerp(highlightProrights, other.highlightProrights, t)!,
+      keyBoardBackgroundColor: Color.lerp(keyBoardBackgroundColor, other.keyBoardBackgroundColor, t)!,
     );
   }
 }

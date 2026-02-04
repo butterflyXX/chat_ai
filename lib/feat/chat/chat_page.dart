@@ -1,4 +1,5 @@
 import 'package:chat_ai/common/common.dart';
+import 'package:chat_ai/feat/chat/chat_input_bar/chat_input_bar.dart';
 import 'package:chat_ai/feat/chat/chat_item.dart';
 import 'package:chat_ai/service/ai_service/ai_service_spark.dart';
 
@@ -33,6 +34,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
   late final aiServiceType = AiServiceType.fromValue(widget.aiServiceType);
   late final aiService = aiServiceType.service;
   final List<AiMessageModel> _messages = [];
+  final ScrollController _scrollController = ScrollController();
 
   @override
   initState() {
@@ -48,6 +50,13 @@ class _ChatPageState extends ConsumerState<ChatPage> {
             _messages.add(message);
         }
       });
+      WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeInOut,
+        );
+      });
     });
   }
 
@@ -55,19 +64,21 @@ class _ChatPageState extends ConsumerState<ChatPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: CAAppBar.commonAppbar(context, title: aiServiceType.displayName(context)),
-      body: ListView.separated(
-        padding: EdgeInsets.only(left: 16.w, right: 16.w, bottom: ScreenUtil().bottomBarHeight + 16.w),
-        itemBuilder: (context, index) {
-          return ChatItemAiWidget(message: _messages[index]);
-        },
-        itemCount: _messages.length,
-        separatorBuilder: (context, index) => SizedBox(height: 16.w),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          aiService.sendMessage('帮我写一篇2000字作文,题目随意');
-        },
-        child: Icon(Icons.send),
+      body: Column(
+        children: [
+          Expanded(
+            child: ListView.separated(
+              controller: _scrollController,
+              padding: EdgeInsets.only(left: 16.w, right: 16.w, bottom: 16.w),
+              itemBuilder: (context, index) {
+                return ChatItemAiWidget(message: _messages[index]);
+              },
+              itemCount: _messages.length,
+              separatorBuilder: (context, index) => SizedBox(height: 16.w),
+            ),
+          ),
+          ChatBottomBar(onSubmit: aiService.sendMessage),
+        ],
       ),
     );
   }

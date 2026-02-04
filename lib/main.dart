@@ -14,26 +14,29 @@ class MyApp extends StatelessWidget {
   const MyApp({super.key});
   @override
   Widget build(BuildContext context) {
-    return ScreenUtilInit(
-      designSize: const Size(375, 812),
-      child: Consumer(
-        builder: (context, ref, child) {
-          return MaterialApp.router(
-            title: 'Flutter Demo',
-            theme: lightTheme,
-            darkTheme: darkTheme,
-            localizationsDelegates: const [
-              S.delegate,
-              GlobalCupertinoLocalizations.delegate,
-              GlobalMaterialLocalizations.delegate,
-              GlobalWidgetsLocalizations.delegate,
-            ],
-            supportedLocales: S.delegate.supportedLocales,
-            locale: ref.watch(localeStateProvider).value,
-            themeMode: ref.watch(themeStateProvider),
-            routerConfig: router,
-          );
-        },
+    return GestureDetector(
+      onTap: FocusScope.of(context).unfocus,
+      child: ScreenUtilInit(
+        designSize: const Size(375, 812),
+        child: Consumer(
+          builder: (context, ref, child) {
+            return MaterialApp.router(
+              title: 'Flutter Demo',
+              theme: lightTheme,
+              darkTheme: darkTheme,
+              localizationsDelegates: const [
+                S.delegate,
+                GlobalCupertinoLocalizations.delegate,
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+              ],
+              supportedLocales: S.delegate.supportedLocales,
+              locale: ref.watch(localeStateProvider).value,
+              themeMode: ref.watch(themeStateProvider),
+              routerConfig: router,
+            );
+          },
+        ),
       ),
     );
   }
