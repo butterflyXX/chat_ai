@@ -43,7 +43,6 @@ class _CommonTextFieldState extends State<CommonTextField> {
       onSubmitted: (value) {
         widget.onSubmit?.call(value);
         controller.clear();
-        focusNode.requestFocus();
       },
     );
   }

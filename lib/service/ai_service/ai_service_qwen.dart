@@ -9,15 +9,14 @@ export 'package:chat_ai/service/ai_service/ai_service_base.dart';
 
 class ChatAiServiceQwen extends AiServiceBase {
   final _dio = Dio();
-  StreamSubscription<String>? _currentSubscription;
 
   @override
   Future<void> sendMessage(String message) async {
     await super.sendMessage(message);
 
     // 取消之前的订阅，避免多个 Stream 同时监听
-    await _currentSubscription?.cancel();
-    _currentSubscription = null;
+    await currentSubscription?.cancel();
+    currentSubscription = null;
 
     try {
       _dio.options.headers['Authorization'] = 'Bearer $qwenAppKey';
@@ -51,7 +50,7 @@ class ChatAiServiceQwen extends AiServiceBase {
 
     final lineStream = utf8.decoder.bind(byteStream).transform(const LineSplitter());
 
-    _currentSubscription = lineStream.listen(
+    currentSubscription = lineStream.listen(
       (line) {
         try {
           _processLine(line);
@@ -66,7 +65,7 @@ class ChatAiServiceQwen extends AiServiceBase {
       onDone: () {
         LogUtil.d("Stream 完成");
         reseveMessage(AiMessageState.end, '');
-        _currentSubscription = null;
+        currentSubscription = null;
       },
       cancelOnError: false, // 不因错误自动取消，继续处理后续数据
     );
@@ -123,8 +122,6 @@ class ChatAiServiceQwen extends AiServiceBase {
 
   @override
   Future<void> dispose() async {
-    await _currentSubscription?.cancel();
-    _currentSubscription = null;
     await super.dispose();
   }
 }

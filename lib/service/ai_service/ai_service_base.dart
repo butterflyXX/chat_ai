@@ -24,12 +24,14 @@ class AiMessageModel {
 }
 
 abstract class AiServiceBase {
+  bool aiing = false;
   final _messageBuffer = StringBuffer();
-  final _streamcontroller = StreamController.broadcast();
+  final _streamcontroller = StreamController<AiMessageModel>.broadcast();
   final historyMessages = <AiMessageModel>[];
-  Stream get stream => _streamcontroller.stream;
+  Stream<AiMessageModel> get stream => _streamcontroller.stream;
+  StreamSubscription? currentSubscription;
   Future<void> sendMessage(String message) async {
-    historyMessages.add(AiMessageModel(role: AiMessageRole.user, state: AiMessageState.end, message: message));
+    _addMessage(AiMessageModel(role: AiMessageRole.user, state: AiMessageState.end, message: message), isUser: true);
     _messageBuffer.clear();
   }
 
@@ -39,16 +41,44 @@ abstract class AiServiceBase {
     final messageModel = AiMessageModel(role: AiMessageRole.assistant, state: state, message: totalMessage);
     switch (state) {
       case AiMessageState.start:
-        historyMessages.add(messageModel);
+        _addMessage(messageModel);
       case AiMessageState.streaming:
       case AiMessageState.end:
         historyMessages.removeLast();
-        historyMessages.add(messageModel);
+        _addMessage(messageModel);
+    }
+  }
+
+  void _addMessage(AiMessageModel messageModel, {bool isUser = false}) {
+    historyMessages.add(messageModel);
+    if (isUser) {
+      aiing = true;
+    } else {
+      if (messageModel.state == AiMessageState.end) {
+        aiing = false;
+      }
     }
     _streamcontroller.add(messageModel);
   }
 
+  Future<void> stopAi() async {
+    await _cancelSubscription();
+    if (!aiing) return;
+    aiing = false;
+
+    final lastMessage = historyMessages.last;
+    _streamcontroller.add(
+      AiMessageModel(role: lastMessage.role, state: AiMessageState.end, message: lastMessage.message),
+    );
+  }
+
+  Future<void> _cancelSubscription() async {
+    await currentSubscription?.cancel();
+    currentSubscription = null;
+  }
+
   Future<void> dispose() async {
+    await _cancelSubscription();
     await _streamcontroller.close();
   }
 }

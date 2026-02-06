@@ -1,4 +1,5 @@
 import 'package:chat_ai/common/common.dart';
+import 'package:chat_ai/common/util/log_util.dart';
 import 'package:chat_ai/feat/chat/chat_input_bar/chat_input_bar.dart';
 import 'package:chat_ai/feat/chat/chat_item.dart';
 import 'package:chat_ai/service/ai_service/ai_service_qwen.dart';
@@ -44,13 +45,15 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     super.initState();
     aiService.stream.listen((message) {
       setState(() {});
-      WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-        _scrollController.animateTo(
-          _scrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 100),
-          curve: Curves.easeInOut,
-        );
-      });
+      if (message.role == AiMessageRole.assistant) {
+        WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+          _scrollController.animateTo(
+            _scrollController.position.maxScrollExtent,
+            duration: const Duration(milliseconds: 100),
+            curve: Curves.easeInOut,
+          );
+        });
+      }
     });
   }
 
@@ -86,7 +89,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
               ),
             ),
           ),
-          ChatBottomBar(onSubmit: aiService.sendMessage),
+          ChatBottomBar(onSubmit: aiService.sendMessage, aiing: aiService.aiing, onStop: aiService.stopAi),
         ],
       ),
     );
