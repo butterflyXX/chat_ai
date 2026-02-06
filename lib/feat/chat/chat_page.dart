@@ -45,10 +45,10 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     aiService.stream.listen((message) {
       setState(() {});
       WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-        _scrollController.jumpTo(
+        _scrollController.animateTo(
           _scrollController.position.maxScrollExtent,
-          // duration: const Duration(milliseconds: 50),
-          // curve: Curves.easeInOut,
+          duration: const Duration(milliseconds: 100),
+          curve: Curves.easeInOut,
         );
       });
     });
@@ -61,18 +61,29 @@ class _ChatPageState extends ConsumerState<ChatPage> {
       body: Column(
         children: [
           Expanded(
-            child: ListView.separated(
-              controller: _scrollController,
-              padding: EdgeInsets.only(left: 16.w, right: 16.w, bottom: 16.w),
-              itemBuilder: (context, index) {
-                if (aiService.historyMessages[index].role == AiMessageRole.user) {
-                  return ChatUserWidget(message: aiService.historyMessages[index]);
-                } else {
-                  return ChatAiWidget(message: aiService.historyMessages[index]);
-                }
+            child: ShaderMask(
+              shaderCallback: (Rect bounds) {
+                return const LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Colors.white, Colors.white, Colors.transparent],
+                  stops: [0.0, 0.98, 1.0],
+                ).createShader(bounds);
               },
-              itemCount: aiService.historyMessages.length,
-              separatorBuilder: (context, index) => SizedBox(height: 16.w),
+              blendMode: BlendMode.dstIn,
+              child: ListView.separated(
+                controller: _scrollController,
+                padding: EdgeInsets.only(left: 16.w, right: 16.w, bottom: 16.w),
+                itemBuilder: (context, index) {
+                  if (aiService.historyMessages[index].role == AiMessageRole.user) {
+                    return ChatUserWidget(message: aiService.historyMessages[index]);
+                  } else {
+                    return ChatAiWidget(message: aiService.historyMessages[index]);
+                  }
+                },
+                itemCount: aiService.historyMessages.length,
+                separatorBuilder: (context, index) => SizedBox(height: 16.w),
+              ),
             ),
           ),
           ChatBottomBar(onSubmit: aiService.sendMessage),
