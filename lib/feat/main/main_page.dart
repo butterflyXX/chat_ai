@@ -17,6 +17,7 @@ class _MainPageState extends ConsumerState<MainPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: PageView.builder(
+        physics: const NeverScrollableScrollPhysics(),
         controller: _pageController,
         itemBuilder: (context, index) => _tabs[index].widget(),
         itemCount: _tabs.length,

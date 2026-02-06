@@ -45,10 +45,10 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     aiService.stream.listen((message) {
       setState(() {});
       WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-        _scrollController.animateTo(
+        _scrollController.jumpTo(
           _scrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 250),
-          curve: Curves.easeInOut,
+          // duration: const Duration(milliseconds: 50),
+          // curve: Curves.easeInOut,
         );
       });
     });

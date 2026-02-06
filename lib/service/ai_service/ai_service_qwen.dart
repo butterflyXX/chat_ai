@@ -9,62 +9,122 @@ export 'package:chat_ai/service/ai_service/ai_service_base.dart';
 
 class ChatAiServiceQwen extends AiServiceBase {
   final _dio = Dio();
+  StreamSubscription<String>? _currentSubscription;
 
   @override
   Future<void> sendMessage(String message) async {
     await super.sendMessage(message);
-    _dio.options.headers['Authorization'] = 'Bearer $qwenAppKey';
-    _dio.options.responseType = ResponseType.stream;
-    final response = await _dio.post(
-      'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions',
-      data: {
-        'model': 'qwen-plus',
-        "stream": true,
-        'messages': [
-          ...historyMessages.map((e) => {'role': e.role.name, 'content': e.message}),
-        ],
-      },
-    );
-    processQwenStream(response.data.stream);
+
+    // 取消之前的订阅，避免多个 Stream 同时监听
+    await _currentSubscription?.cancel();
+    _currentSubscription = null;
+
+    try {
+      _dio.options.headers['Authorization'] = 'Bearer $qwenAppKey';
+      _dio.options.responseType = ResponseType.stream;
+      final response = await _dio.post(
+        'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions',
+        data: {
+          'model': 'qwen-plus',
+          "stream": true,
+          'messages': [
+            ...historyMessages.map((e) => {'role': e.role.name, 'content': e.message}),
+          ],
+        },
+      );
+
+      if (response.data?.stream != null) {
+        processQwenStream(response.data!.stream);
+      } else {
+        LogUtil.d("响应数据为空");
+        reseveMessage(AiMessageState.end, '');
+      }
+    } catch (e) {
+      LogUtil.d("发送消息失败: $e");
+      reseveMessage(AiMessageState.end, '');
+      rethrow;
+    }
   }
 
   void processQwenStream(Stream<List<int>> byteStream) {
     reseveMessage(AiMessageState.start, '');
-    // 1. 将字节流转换为字符串行流
-    final lineStream = utf8.decoder
-        .bind(byteStream) // 字节转字符串
-        .transform(const LineSplitter()); // 按行切割
 
-    lineStream.listen((line) {
-      // 2. 过滤掉空行
-      if (line.trim().isEmpty) return;
+    final lineStream = utf8.decoder.bind(byteStream).transform(const LineSplitter());
 
-      // 3. 检查是否结束
-      // if (line.startsWith("data: ")) {
-      if (line.startsWith("data: [DONE]")) {
+    _currentSubscription = lineStream.listen(
+      (line) {
+        try {
+          _processLine(line);
+        } catch (e) {
+          LogUtil.d("处理行数据出错: $e, line: $line");
+        }
+      },
+      onError: (error) {
+        LogUtil.d("Stream 错误: $error");
         reseveMessage(AiMessageState.end, '');
+      },
+      onDone: () {
+        LogUtil.d("Stream 完成");
+        reseveMessage(AiMessageState.end, '');
+        _currentSubscription = null;
+      },
+      cancelOnError: false, // 不因错误自动取消，继续处理后续数据
+    );
+  }
+
+  void _processLine(String line) {
+    final trimmedLine = line.trim();
+    if (trimmedLine.isEmpty) return;
+
+    if (trimmedLine == "data: [DONE]" || trimmedLine.startsWith("data: [DONE]")) {
+      reseveMessage(AiMessageState.end, '');
+      return;
+    }
+
+    if (trimmedLine.startsWith("data: ")) {
+      if (trimmedLine.length <= 6) {
+        LogUtil.d("数据行格式错误，长度不足: $trimmedLine");
         return;
       }
 
-      // 4. 解析 data: 后面的 JSON
-      if (line.startsWith("data: ")) {
-        try {
-          final jsonString = line.substring(6).trim(); // 去掉 "data: "
-          final Map<String, dynamic> data = jsonDecode(jsonString);
+      try {
+        final jsonString = trimmedLine.substring(6).trim();
+        if (jsonString.isEmpty) return;
 
-          // 5. 提取增量内容 (Delta Content)
-          final choices = data['choices'] as List;
-          if (choices.isNotEmpty) {
-            final delta = choices[0]['delta'];
-            if (delta != null && delta['content'] != null) {
-              String content = delta['content'];
-              reseveMessage(AiMessageState.streaming, content);
-            }
-          }
-        } catch (e) {
-          LogUtil.d("解析 JSON 出错: $e");
+        final dynamic decoded = jsonDecode(jsonString);
+
+        if (decoded is! Map<String, dynamic>) {
+          LogUtil.d("JSON 不是 Map 类型: $decoded");
+          return;
         }
+
+        final choices = decoded['choices'];
+        if (choices == null) return;
+
+        if (choices is! List || choices.isEmpty) return;
+
+        final firstChoice = choices[0];
+        if (firstChoice is! Map<String, dynamic>) return;
+
+        final delta = firstChoice['delta'];
+        if (delta == null) return;
+
+        if (delta is Map<String, dynamic>) {
+          final content = delta['content'];
+          if (content != null && content is String) {
+            reseveMessage(AiMessageState.streaming, content);
+          }
+        }
+      } catch (e) {
+        LogUtil.d("解析 JSON 出错: $e, line: $trimmedLine");
       }
-    });
+    }
+  }
+
+  @override
+  Future<void> dispose() async {
+    await _currentSubscription?.cancel();
+    _currentSubscription = null;
+    await super.dispose();
   }
 }

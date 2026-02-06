@@ -102,6 +102,11 @@ class ChatAiWidget extends StatelessWidget {
             color: context.appTheme.highlightBlue,
             decoration: TextDecoration.underline,
           ),
+          horizontalRuleDecoration: BoxDecoration(
+            border: Border(
+              top: BorderSide(width: 1.px, color: context.appTheme.separatorsSecondary),
+            ),
+          ),
         ),
         builders: {'pre': CodeElementBuilder(isDark: isDark, appTheme: context.appTheme)},
       ),
@@ -120,11 +125,11 @@ class ChatUserWidget extends StatelessWidget {
         const Spacer(),
         Container(
           padding: EdgeInsets.all(16.w),
-          decoration: BoxDecoration(color: context.appTheme.highlightGreen, borderRadius: BorderRadius.circular(16.w)),
+          decoration: BoxDecoration(color: ColorsTheme.highlightBlue, borderRadius: BorderRadius.circular(16.w)),
           constraints: BoxConstraints(maxWidth: 1.sw * 0.75, minWidth: 1.sw * 0.2),
           child: SelectableText(
             message.message,
-            style: TextStyleTheme.regular14.copyWith(color: context.appTheme.textPrimary),
+            style: TextStyleTheme.regular14.copyWith(color: ColorsTheme.textOndarkPrimary),
           ),
         ),
       ],
