@@ -29,6 +29,7 @@ class ChatAiServiceQwen extends AiServiceBase {
           'messages': [
             ...historyMessages.map((e) => {'role': e.role.name, 'content': e.message}),
           ],
+          "enable_search": true,
         },
       );
 

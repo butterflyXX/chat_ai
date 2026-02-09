@@ -4,7 +4,8 @@ import 'package:flutter/cupertino.dart';
 class CommonTextField extends StatefulWidget {
   final ValueChanged<String>? onSubmit;
   final ValueChanged<bool>? hasFocus;
-  const CommonTextField({this.onSubmit, this.hasFocus, super.key});
+  final String? placeholder;
+  const CommonTextField({this.onSubmit, this.hasFocus, this.placeholder, super.key});
 
   @override
   State<CommonTextField> createState() => _CommonTextFieldState();
@@ -34,9 +35,11 @@ class _CommonTextFieldState extends State<CommonTextField> {
   @override
   Widget build(BuildContext context) {
     return CupertinoTextField(
-      decoration: BoxDecoration(borderRadius: BorderRadius.circular(5), color: context.appTheme.fillsPrimary),
+      decoration: BoxDecoration(color: Colors.transparent),
       controller: controller,
       focusNode: focusNode,
+      placeholder: widget.placeholder,
+      style: TextStyleTheme.regular16.copyWith(color: context.appTheme.textPrimary),
       maxLines: 10,
       minLines: 1,
       textInputAction: TextInputAction.send,

@@ -1,5 +1,4 @@
 import 'package:chat_ai/common/common.dart';
-import 'package:chat_ai/common/util/log_util.dart';
 import 'package:chat_ai/feat/chat/chat_input_bar/chat_input_bar.dart';
 import 'package:chat_ai/feat/chat/chat_item.dart';
 import 'package:chat_ai/service/ai_service/ai_service_qwen.dart';
