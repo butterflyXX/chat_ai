@@ -44,15 +44,18 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     super.initState();
     aiService.stream.listen((message) {
       setState(() {});
-      if (message.role == AiMessageRole.assistant) {
-        WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-          _scrollController.animateTo(
-            _scrollController.position.maxScrollExtent,
-            duration: const Duration(milliseconds: 100),
-            curve: Curves.easeInOut,
-          );
-        });
+      int delayed = 0;
+      if (message.role == AiMessageRole.user) {
+        delayed = 250;
       }
+
+      Future.delayed(Duration(milliseconds: delayed), () {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 100),
+          curve: Curves.easeInOut,
+        );
+      });
     });
   }
 
