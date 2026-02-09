@@ -1,8 +1,10 @@
 import 'package:chat_ai/common/common.dart';
+import 'package:chat_ai/common/util/log_util.dart';
 import 'package:chat_ai/feat/chat/chat_input_bar/chat_input_bar.dart';
 import 'package:chat_ai/feat/chat/chat_item.dart';
 import 'package:chat_ai/service/ai_service/ai_service_qwen.dart';
 import 'package:chat_ai/service/ai_service/ai_service_spark.dart';
+import 'package:flutter/rendering.dart';
 
 enum AiServiceType {
   spark(0),
@@ -39,11 +41,16 @@ class _ChatPageState extends ConsumerState<ChatPage> {
   late final aiService = aiServiceType.service;
   final ScrollController _scrollController = ScrollController();
 
+  bool _isUserScrolling = false;
+  bool _isAtBottom = true;
+
   @override
   initState() {
     super.initState();
     aiService.stream.listen((message) {
+      if (_isUserScrolling) return;
       setState(() {});
+      if (!_isAtBottom) return;
       int delayed = 0;
       if (message.role == AiMessageRole.user) {
         delayed = 250;
@@ -76,18 +83,33 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                 ).createShader(bounds);
               },
               blendMode: BlendMode.dstIn,
-              child: ListView.separated(
-                controller: _scrollController,
-                padding: EdgeInsets.only(left: 16.w, right: 16.w, bottom: 16.w),
-                itemBuilder: (context, index) {
-                  if (aiService.historyMessages[index].role == AiMessageRole.user) {
-                    return ChatUserWidget(message: aiService.historyMessages[index]);
-                  } else {
-                    return ChatAiWidget(message: aiService.historyMessages[index]);
+              child: NotificationListener<ScrollNotification>(
+                onNotification: (notification) {
+                  if (notification is UserScrollNotification) {
+                    if (notification.direction == ScrollDirection.idle) {
+                      // 确定是【用户】在滑，记录状态，暂停你的自动滚动逻辑
+                      _isUserScrolling = false;
+                      final metrics = notification.metrics;
+                      _isAtBottom = metrics.maxScrollExtent - metrics.pixels < 50;
+                    } else {
+                      _isUserScrolling = true;
+                    }
                   }
+                  return false;
                 },
-                itemCount: aiService.historyMessages.length,
-                separatorBuilder: (context, index) => SizedBox(height: 16.w),
+                child: ListView.separated(
+                  controller: _scrollController,
+                  padding: EdgeInsets.only(left: 16.w, right: 16.w, bottom: 16.w),
+                  itemBuilder: (context, index) {
+                    if (aiService.historyMessages[index].role == AiMessageRole.user) {
+                      return ChatUserWidget(message: aiService.historyMessages[index]);
+                    } else {
+                      return ChatAiWidget(message: aiService.historyMessages[index]);
+                    }
+                  },
+                  itemCount: aiService.historyMessages.length,
+                  separatorBuilder: (context, index) => SizedBox(height: 16.w),
+                ),
               ),
             ),
           ),
