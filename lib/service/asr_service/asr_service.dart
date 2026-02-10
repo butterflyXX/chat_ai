@@ -23,7 +23,7 @@ abstract class AsrServiceBase {
   List<RecognitionResult> textList = [];
   Completer? _resultCompleter;
 
-  VoidCallback? _removeListener;
+  StreamSubscription? _removeListener;
 
   ValueChanged<String>? onError;
 
@@ -40,7 +40,7 @@ abstract class AsrServiceBase {
       return;
     }
 
-    _removeListener = recordService.listen(sendAudio);
+    _removeListener = recordService.audioStream.listen(sendAudio);
     _resultCompleter = Completer();
     onStart();
   }
@@ -49,7 +49,7 @@ abstract class AsrServiceBase {
   Future<List<RecognitionResult>> stop() async {
     final recordService = ServiceManager.getRecord;
     await recordService.stop();
-    _removeListener?.call();
+    await _removeListener?.cancel();
     _removeListener = null;
     onStop();
     await _resultCompleter?.future;

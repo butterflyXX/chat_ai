@@ -29,9 +29,7 @@ class RecordService extends RecordServiceBase {
       );
 
       final stream = await record.startStream(config);
-      _subscription = stream.listen((data) {
-        add(data);
-      });
+      _subscription = stream.listen(add);
 
       LogUtil.d('录音服务启动成功');
       return true;
