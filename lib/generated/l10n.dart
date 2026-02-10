@@ -128,6 +128,16 @@ class S {
   String get qwen {
     return Intl.message('Qwen', name: 'qwen', desc: '', args: []);
   }
+
+  /// `No voice detected`
+  String get chatBarNoVoice {
+    return Intl.message(
+      'No voice detected',
+      name: 'chatBarNoVoice',
+      desc: '',
+      args: [],
+    );
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<S> {

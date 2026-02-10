@@ -1,3 +1,4 @@
+import 'package:bot_toast/bot_toast.dart';
 import 'package:chat_ai/common/theme/theme.dart';
 import 'package:chat_ai/provider/locale_state/locale_state.dart';
 import 'package:chat_ai/provider/theme_state/theme_state.dart';
@@ -24,6 +25,7 @@ class MyApp extends StatelessWidget {
               title: 'Flutter Demo',
               theme: lightTheme,
               darkTheme: darkTheme,
+              builder: BotToastInit(),
               localizationsDelegates: const [
                 S.delegate,
                 GlobalCupertinoLocalizations.delegate,

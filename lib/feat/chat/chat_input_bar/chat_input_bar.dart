@@ -122,6 +122,7 @@ class _ChatBottomBarState extends ConsumerState<ChatBottomBar> {
 
   Future<void> _startRecord() async {
     setState(() {
+      volumeState = ChatBottomBarVolumeState.on;
       isSpeaking = true;
     });
     await ServiceManager.getAsr.start();
@@ -132,8 +133,13 @@ class _ChatBottomBarState extends ConsumerState<ChatBottomBar> {
       isSpeaking = false;
     });
     final result = await ServiceManager.getAsr.stop();
-    if (isCancel) return;
+    if (isCancel || volumeState == ChatBottomBarVolumeState.cancel) return;
     final str = result.map((e) => e.text).join('');
+    showToast(S.current.chatBarNoVoice);
+    if (result.isEmpty || str.isEmpty) {
+      showToast(S.current.chatBarNoVoice);
+      return;
+    }
     widget.onSubmit?.call(str);
   }
 

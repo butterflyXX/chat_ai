@@ -13,3 +13,4 @@ export 'package:chat_ai/common/widget/appbar/common_app_bar.dart';
 export 'package:chat_ai/common/widget/keep_alive_widget.dart';
 export 'package:chat_ai/route.dart';
 export 'package:chat_ai/common/extension/extension_int.dart';
+export 'package:chat_ai/common/util/toast_util.dart';

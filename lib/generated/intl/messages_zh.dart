@@ -23,6 +23,7 @@ class MessageLookup extends MessageLookupByLibrary {
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
     "asr": MessageLookupByLibrary.simpleMessage("语音识别"),
+    "chatBarNoVoice": MessageLookupByLibrary.simpleMessage("未检测到声音"),
     "general": MessageLookupByLibrary.simpleMessage("通用设置"),
     "home": MessageLookupByLibrary.simpleMessage("首页"),
     "locale": MessageLookupByLibrary.simpleMessage("语言"),

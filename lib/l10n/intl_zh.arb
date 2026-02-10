@@ -13,5 +13,6 @@
     "me": "我的",
     "general": "通用设置",
     "spark": "星火认知",
-    "qwen": "通义千问"
+    "qwen": "通义千问",
+    "chatBarNoVoice": "未检测到声音"
 }

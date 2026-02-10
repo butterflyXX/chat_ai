@@ -13,5 +13,6 @@
     "me": "Me",
     "general": "General",
     "spark": "Spark",
-    "qwen": "Qwen"
+    "qwen": "Qwen",
+    "chatBarNoVoice": "No voice detected"
 }
