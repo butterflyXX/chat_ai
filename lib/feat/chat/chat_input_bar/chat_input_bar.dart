@@ -1,5 +1,6 @@
 import 'package:chat_ai/common/common.dart';
 import 'package:chat_ai/common/widget/text_field/common_text_field.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_lucide/flutter_lucide.dart';
 
 class ChatBottomBar extends ConsumerStatefulWidget {
@@ -121,6 +122,7 @@ class _ChatBottomBarState extends ConsumerState<ChatBottomBar> {
   }
 
   Future<void> _startRecord() async {
+    HapticFeedback.vibrate();
     setState(() {
       volumeState = ChatBottomBarVolumeState.on;
       isSpeaking = true;
@@ -135,7 +137,6 @@ class _ChatBottomBarState extends ConsumerState<ChatBottomBar> {
     final result = await ServiceManager.getAsr.stop();
     if (isCancel || volumeState == ChatBottomBarVolumeState.cancel) return;
     final str = result.map((e) => e.text).join('');
-    showToast(S.current.chatBarNoVoice);
     if (result.isEmpty || str.isEmpty) {
       showToast(S.current.chatBarNoVoice);
       return;
@@ -150,6 +151,7 @@ class _ChatBottomBarState extends ConsumerState<ChatBottomBar> {
         ? ChatBottomBarVolumeState.on
         : ChatBottomBarVolumeState.cancel;
     if (newVolumeState != volumeState) {
+      HapticFeedback.vibrate();
       setState(() {
         volumeState = newVolumeState;
       });
