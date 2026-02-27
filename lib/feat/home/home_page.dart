@@ -22,7 +22,7 @@ class _HomePageState extends ConsumerState<HomePage> {
   Widget _buildAiServiceItem(AiServiceType aiServiceType) {
     return SettingSelectItemWidget(
       title: aiServiceType.displayName(context),
-      onTap: () => context.push(ChatRoute(aiServiceType: aiServiceType.value).location),
+      onTap: () => ChatRoute(aiServiceType: aiServiceType.value).push(context),
     );
   }
 }

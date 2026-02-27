@@ -24,14 +24,14 @@ class _MePageState extends ConsumerState<MePage> {
                 S.of(context).theme,
                 subtitle: ref.watch(themeStateProvider).displayName,
                 onTap: () {
-                  context.push(SettingThemeRoute().location);
+                  SettingThemeRoute().push(context);
                 },
               ),
               _buildItem(
                 S.of(context).locale,
                 subtitle: ref.watch(localeStateProvider).displayName,
                 onTap: () {
-                  context.push(SettingLocaleRoute().location);
+                  SettingLocaleRoute().push(context);
                 },
               ),
             ],

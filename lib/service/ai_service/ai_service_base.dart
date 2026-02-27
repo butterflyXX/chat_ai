@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:chat_ai/common/util/log_util.dart';
+
 enum AiMessageState {
   start(0),
   streaming(1),
@@ -21,6 +23,11 @@ class AiMessageModel {
   String message;
 
   AiMessageModel({required this.role, required this.state, required this.message});
+
+  @override
+  String toString() {
+    return 'AiMessageModel(role: $role, state: $state, message: $message)';
+  }
 }
 
 abstract class AiServiceBase {
@@ -36,6 +43,7 @@ abstract class AiServiceBase {
   }
 
   void reseveMessage(AiMessageState state, String message) {
+    LogUtil.d('reseveMessage: $message');
     _messageBuffer.write(message);
     final totalMessage = _messageBuffer.toString();
     final messageModel = AiMessageModel(role: AiMessageRole.assistant, state: state, message: totalMessage);
