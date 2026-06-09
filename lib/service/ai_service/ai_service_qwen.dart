@@ -24,7 +24,7 @@ class ChatAiServiceQwen extends AiServiceBase {
       final response = await _dio.post(
         'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions',
         data: {
-          'model': 'qwen-plus',
+          'model': 'qwen3.7-plus',
           "stream": true,
           'messages': [
             ...historyMessages.map((e) => {'role': e.role.name, 'content': e.message}),

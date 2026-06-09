@@ -1,5 +1,5 @@
 import 'package:chat_ai/common/common.dart';
-import 'package:chat_ai/service/ai_service/ai_service_spark.dart';
+import 'package:chat_ai/service/ai_service/ai_service_base.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:flutter_highlight/flutter_highlight.dart';
 import 'package:flutter_highlight/themes/atom-one-dark.dart';
