@@ -1,0 +1,8 @@
+# .coderabbit.yaml
+language: "zh-CN" # 强制指定评审回复语言为中文
+
+reviews:
+  profile: "assertive" # 严格模式 (可选 chill 宽松模式)
+  # 你还可以在下面顺便加上你们的 Flutter/移动端规范
+  system_prompt: |
+    请严格使用简体中文进行代码评审和问题解释。
