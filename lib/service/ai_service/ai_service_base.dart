@@ -1,7 +1,5 @@
 import 'dart:async';
 
-import 'package:chat_ai/common/util/log_util.dart';
-
 enum AiMessageState {
   start(0),
   streaming(1),
@@ -22,31 +20,47 @@ class AiMessageModel {
   final AiMessageState state;
   String message;
 
-  AiMessageModel({required this.role, required this.state, required this.message});
+  /// 模型的思考链内容（仅部分推理模型返回，如 qwen3.7-plus）
+  String reasoningContent;
+
+  AiMessageModel({
+    required this.role,
+    required this.state,
+    required this.message,
+    this.reasoningContent = '',
+  });
 
   @override
   String toString() {
-    return 'AiMessageModel(role: $role, state: $state, message: $message)';
+    return 'AiMessageModel(role: $role, state: $state, message: $message, reasoningContent: $reasoningContent)';
   }
 }
 
 abstract class AiServiceBase {
   bool aiing = false;
   final _messageBuffer = StringBuffer();
+  final _reasoningBuffer = StringBuffer();
   final _streamcontroller = StreamController<AiMessageModel>.broadcast();
   final historyMessages = <AiMessageModel>[];
   Stream<AiMessageModel> get stream => _streamcontroller.stream;
   StreamSubscription? currentSubscription;
+
   Future<void> sendMessage(String message) async {
     _addMessage(AiMessageModel(role: AiMessageRole.user, state: AiMessageState.end, message: message), isUser: true);
     _messageBuffer.clear();
+    _reasoningBuffer.clear();
   }
 
-  void reseveMessage(AiMessageState state, String message) {
-    LogUtil.d('reseveMessage: $message');
+  /// [message] 正式回答内容增量，[reasoningContent] 思考链增量
+  void reseveMessage(AiMessageState state, String message, {String reasoningContent = ''}) {
     _messageBuffer.write(message);
-    final totalMessage = _messageBuffer.toString();
-    final messageModel = AiMessageModel(role: AiMessageRole.assistant, state: state, message: totalMessage);
+    _reasoningBuffer.write(reasoningContent);
+    final messageModel = AiMessageModel(
+      role: AiMessageRole.assistant,
+      state: state,
+      message: _messageBuffer.toString(),
+      reasoningContent: _reasoningBuffer.toString(),
+    );
     switch (state) {
       case AiMessageState.start:
         _addMessage(messageModel);

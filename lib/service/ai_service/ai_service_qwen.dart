@@ -14,7 +14,6 @@ class ChatAiServiceQwen extends AiServiceBase {
   Future<void> sendMessage(String message) async {
     await super.sendMessage(message);
 
-    // 取消之前的订阅，避免多个 Stream 同时监听
     await currentSubscription?.cancel();
     currentSubscription = null;
 
@@ -25,16 +24,15 @@ class ChatAiServiceQwen extends AiServiceBase {
         'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions',
         data: {
           'model': 'qwen3.7-plus',
-          "stream": true,
+          'stream': true,
           'messages': [
             ...historyMessages.map((e) => {'role': e.role.name, 'content': e.message}),
           ],
-          "enable_search": true,
         },
       );
 
       if (response.data?.stream != null) {
-        processQwenStream(response.data!.stream);
+        _processQwenStream(response.data!.stream);
       } else {
         LogUtil.d("响应数据为空");
         reseveMessage(AiMessageState.end, '');
@@ -46,7 +44,7 @@ class ChatAiServiceQwen extends AiServiceBase {
     }
   }
 
-  void processQwenStream(Stream<List<int>> byteStream) {
+  void _processQwenStream(Stream<List<int>> byteStream) {
     reseveMessage(AiMessageState.start, '');
 
     final lineStream = utf8.decoder.bind(byteStream).transform(const LineSplitter());
@@ -68,7 +66,7 @@ class ChatAiServiceQwen extends AiServiceBase {
         reseveMessage(AiMessageState.end, '');
         currentSubscription = null;
       },
-      cancelOnError: false, // 不因错误自动取消，继续处理后续数据
+      cancelOnError: false,
     );
   }
 
@@ -76,48 +74,40 @@ class ChatAiServiceQwen extends AiServiceBase {
     final trimmedLine = line.trim();
     if (trimmedLine.isEmpty) return;
 
-    if (trimmedLine == "data: [DONE]" || trimmedLine.startsWith("data: [DONE]")) {
-      reseveMessage(AiMessageState.end, '');
-      return;
-    }
+    // [DONE] 标志由 onDone 统一处理，此处跳过，避免重复触发 end
+    if (trimmedLine.startsWith('data: [DONE]')) return;
+    if (!trimmedLine.startsWith('data: ') || trimmedLine.length <= 6) return;
 
-    if (trimmedLine.startsWith("data: ")) {
-      if (trimmedLine.length <= 6) {
-        LogUtil.d("数据行格式错误，长度不足: $trimmedLine");
-        return;
+    try {
+      final jsonString = trimmedLine.substring(6).trim();
+      if (jsonString.isEmpty) return;
+
+      final decoded = jsonDecode(jsonString);
+      if (decoded is! Map<String, dynamic>) return;
+
+      final choices = decoded['choices'];
+      // choices 为空列表时是末尾的 usage 统计块，直接跳过
+      if (choices is! List || choices.isEmpty) return;
+
+      final firstChoice = choices[0];
+      if (firstChoice is! Map<String, dynamic>) return;
+
+      final delta = firstChoice['delta'];
+      if (delta is! Map<String, dynamic>) return;
+
+      // 思考链内容（qwen3.7-plus 等推理模型专有字段）
+      final reasoningContent = delta['reasoning_content'];
+      if (reasoningContent is String && reasoningContent.isNotEmpty) {
+        reseveMessage(AiMessageState.streaming, '', reasoningContent: reasoningContent);
       }
 
-      try {
-        final jsonString = trimmedLine.substring(6).trim();
-        if (jsonString.isEmpty) return;
-
-        final dynamic decoded = jsonDecode(jsonString);
-
-        if (decoded is! Map<String, dynamic>) {
-          LogUtil.d("JSON 不是 Map 类型: $decoded");
-          return;
-        }
-
-        final choices = decoded['choices'];
-        if (choices == null) return;
-
-        if (choices is! List || choices.isEmpty) return;
-
-        final firstChoice = choices[0];
-        if (firstChoice is! Map<String, dynamic>) return;
-
-        final delta = firstChoice['delta'];
-        if (delta == null) return;
-
-        if (delta is Map<String, dynamic>) {
-          final content = delta['content'];
-          if (content != null && content is String) {
-            reseveMessage(AiMessageState.streaming, content);
-          }
-        }
-      } catch (e) {
-        LogUtil.d("解析 JSON 出错: $e, line: $trimmedLine");
+      // 正式回答内容
+      final content = delta['content'];
+      if (content is String && content.isNotEmpty) {
+        reseveMessage(AiMessageState.streaming, content);
       }
+    } catch (e) {
+      LogUtil.d("解析 JSON 出错: $e, line: $trimmedLine");
     }
   }
 

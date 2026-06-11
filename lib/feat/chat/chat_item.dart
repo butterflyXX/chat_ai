@@ -54,61 +54,159 @@ class CodeElementBuilder extends MarkdownElementBuilder {
   }
 }
 
-class ChatAiWidget extends StatelessWidget {
+class ChatAiWidget extends StatefulWidget {
   final AiMessageModel message;
   const ChatAiWidget({required this.message, super.key});
 
   @override
+  State<ChatAiWidget> createState() => _ChatAiWidgetState();
+}
+
+class _ChatAiWidgetState extends State<ChatAiWidget> {
+  bool _thinkingExpanded = true;
+  final _thinkingScrollController = ScrollController();
+
+  // 字号 12，行高 1.6，5 行 + 上下各 10 padding
+  static const _kThinkingLineHeight = 1.6;
+  static const _kThinkingFontSize = 12.0;
+  static const _kThinkingMaxLines = 5;
+
+  double get _thinkingMaxHeight =>
+      _kThinkingFontSize.w * _kThinkingLineHeight * _kThinkingMaxLines + 20.w;
+
+  @override
+  void didUpdateWidget(ChatAiWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // 当正式回答开始输出时，自动收起思考过程
+    if (oldWidget.message.message.isEmpty && widget.message.message.isNotEmpty) {
+      setState(() => _thinkingExpanded = false);
+    }
+    // 思考内容更新时，自动滚到底部显示最新内容
+    if (_thinkingExpanded &&
+        widget.message.reasoningContent != oldWidget.message.reasoningContent) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_thinkingScrollController.hasClients) {
+          _thinkingScrollController.jumpTo(
+            _thinkingScrollController.position.maxScrollExtent,
+          );
+        }
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _thinkingScrollController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final appTheme = context.appTheme;
+    final hasReasoning = widget.message.reasoningContent.isNotEmpty;
+    final isThinking = widget.message.message.isEmpty && widget.message.state != AiMessageState.end;
+
     return Container(
       padding: EdgeInsets.all(16.w),
-      decoration: BoxDecoration(color: context.appTheme.fillsPrimary, borderRadius: BorderRadius.circular(16.w)),
-      child: MarkdownBody(
-        data: message.message,
-        styleSheet: MarkdownStyleSheet(
-          // 普通段落
-          p: TextStyleTheme.regular14.copyWith(color: context.appTheme.textPrimary, height: 1.6),
-          // 标题样式
-          h1: TextStyleTheme.semibold20.copyWith(color: context.appTheme.textPrimary),
-          h2: TextStyleTheme.semibold18.copyWith(color: context.appTheme.textPrimary),
-          h3: TextStyleTheme.semibold16.copyWith(color: context.appTheme.textPrimary),
-          // 内联代码样式（用反引号包裹的代码）
-          code: TextStyleTheme.regular12.copyWith(
-            color: context.appTheme.highlightRed,
-            backgroundColor: context.appTheme.fillsSecondary,
-            fontFamily: 'monospace',
-          ),
-          // 代码块样式
-          codeblockDecoration: BoxDecoration(
-            color: context.appTheme.fillsSecondary,
-            borderRadius: BorderRadius.circular(8.w),
-            border: Border.all(color: context.appTheme.separatorsPrimary, width: 1),
-          ),
-          codeblockPadding: EdgeInsets.all(12.w),
-          // 列表样式
-          listBullet: TextStyleTheme.regular14.copyWith(color: context.appTheme.textSecondary),
-          // 引用块样式
-          blockquoteDecoration: BoxDecoration(
-            color: context.appTheme.fillsSecondary,
-            borderRadius: BorderRadius.circular(4.w),
-            border: Border(
-              left: BorderSide(color: context.appTheme.highlightBlue, width: 4.w),
+      decoration: BoxDecoration(color: appTheme.fillsPrimary, borderRadius: BorderRadius.circular(16.w)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (hasReasoning) ...[
+            _buildThinkingSection(appTheme, isThinking),
+            if (widget.message.message.isNotEmpty) SizedBox(height: 12.w),
+          ],
+          if (widget.message.message.isNotEmpty)
+            MarkdownBody(
+              data: widget.message.message,
+              styleSheet: MarkdownStyleSheet(
+                p: TextStyleTheme.regular14.copyWith(color: appTheme.textPrimary, height: 1.6),
+                h1: TextStyleTheme.semibold20.copyWith(color: appTheme.textPrimary),
+                h2: TextStyleTheme.semibold18.copyWith(color: appTheme.textPrimary),
+                h3: TextStyleTheme.semibold16.copyWith(color: appTheme.textPrimary),
+                code: TextStyleTheme.regular12.copyWith(
+                  color: appTheme.highlightRed,
+                  backgroundColor: appTheme.fillsSecondary,
+                  fontFamily: 'monospace',
+                ),
+                codeblockDecoration: BoxDecoration(
+                  color: appTheme.fillsSecondary,
+                  borderRadius: BorderRadius.circular(8.w),
+                  border: Border.all(color: appTheme.separatorsPrimary, width: 1),
+                ),
+                codeblockPadding: EdgeInsets.all(12.w),
+                listBullet: TextStyleTheme.regular14.copyWith(color: appTheme.textSecondary),
+                blockquoteDecoration: BoxDecoration(
+                  color: appTheme.fillsSecondary,
+                  borderRadius: BorderRadius.circular(4.w),
+                  border: Border(left: BorderSide(color: appTheme.highlightBlue, width: 4.w)),
+                ),
+                blockquotePadding: EdgeInsets.all(12.w),
+                a: TextStyleTheme.regular14.copyWith(
+                  color: appTheme.highlightBlue,
+                  decoration: TextDecoration.underline,
+                ),
+                horizontalRuleDecoration: BoxDecoration(
+                  border: Border(top: BorderSide(width: 1.px, color: appTheme.separatorsSecondary)),
+                ),
+              ),
+              builders: {'pre': CodeElementBuilder(isDark: isDark, appTheme: appTheme)},
             ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildThinkingSection(AppThemeExtension appTheme, bool isThinking) {
+    return GestureDetector(
+      onTap: () => setState(() => _thinkingExpanded = !_thinkingExpanded),
+      behavior: HitTestBehavior.opaque,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                isThinking ? Icons.psychology_outlined : Icons.psychology,
+                size: 14.w,
+                color: appTheme.textSecondary,
+              ),
+              SizedBox(width: 4.w),
+              Text(
+                isThinking ? '思考中...' : '已完成思考',
+                style: TextStyleTheme.regular12.copyWith(color: appTheme.textSecondary),
+              ),
+              const Spacer(),
+              Icon(
+                _thinkingExpanded ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded,
+                size: 16.w,
+                color: appTheme.textSecondary,
+              ),
+            ],
           ),
-          blockquotePadding: EdgeInsets.all(12.w),
-          // 链接样式
-          a: TextStyleTheme.regular14.copyWith(
-            color: context.appTheme.highlightBlue,
-            decoration: TextDecoration.underline,
-          ),
-          horizontalRuleDecoration: BoxDecoration(
-            border: Border(
-              top: BorderSide(width: 1.px, color: context.appTheme.separatorsSecondary),
+          if (_thinkingExpanded) ...[
+            SizedBox(height: 8.w),
+            Container(
+              width: double.infinity,
+              constraints: BoxConstraints(maxHeight: _thinkingMaxHeight),
+              padding: EdgeInsets.all(10.w),
+              decoration: BoxDecoration(
+                color: appTheme.fillsSecondary,
+                borderRadius: BorderRadius.circular(8.w),
+              ),
+              child: SingleChildScrollView(
+                controller: _thinkingScrollController,
+                physics: const ClampingScrollPhysics(),
+                child: Text(
+                  widget.message.reasoningContent,
+                  style: TextStyleTheme.regular12.copyWith(color: appTheme.textSecondary, height: _kThinkingLineHeight),
+                ),
+              ),
             ),
-          ),
-        ),
-        builders: {'pre': CodeElementBuilder(isDark: isDark, appTheme: context.appTheme)},
+            SizedBox(height: 4.w),
+          ],
+        ],
       ),
     );
   }
