@@ -1,7 +1,8 @@
+import 'package:chat_ai/app_key.dart';
 import 'package:chat_ai/common/common.dart';
 import 'package:chat_ai/feat/chat/chat_input_bar/chat_input_bar.dart';
 import 'package:chat_ai/feat/chat/chat_item.dart';
-import 'package:chat_ai/service/ai_service/ai_service_agnes.dart';
+import 'package:chat_ai/service/ai_service/ai_service_open_ai.dart';
 import 'package:flutter/rendering.dart';
 
 enum AiServiceType {
@@ -11,7 +12,11 @@ enum AiServiceType {
   const AiServiceType(this.value);
 
   AiServiceBase get service => switch (this) {
-    AiServiceType.agnes => ChatAiServiceAgnes(),
+    AiServiceType.agnes => AiServiceOpenAi(
+      apiKey: agnesAppKey,
+      baseUrl: 'https://apihub.agnes-ai.com/v1',
+      model: 'agnes-2.0-flash',
+    ),
   };
 
   static AiServiceType fromValue(int value) {

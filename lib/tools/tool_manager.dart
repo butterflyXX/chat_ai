@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:chat_ai/common/util/log_util.dart';
 import 'package:chat_ai/tools/photos/take_photo.dart';
+import 'package:langchain_core/tools.dart';
 
 enum ToolName {
   takePhoto('take_photo');
@@ -44,16 +45,13 @@ class ToolManager {
   }
 
   /// 获取所有可用工具的定义（用于发送给 LLM）
-  List<Map<String, dynamic>> getToolDefinitions() {
+  List<ToolSpec> getToolDefinitions() {
     return [
-      {
-        'type': 'function',
-        'function': {
-          'name': ToolName.takePhoto.value,
-          'description': '调起相机拍照。当用户需要拍照时使用此工具。',
-          'parameters': {'type': 'object', 'properties': {}, 'required': []},
-        },
-      },
+      ToolSpec(
+        name: ToolName.takePhoto.value,
+        description: '调起相机拍照。当用户需要拍照时使用此工具。',
+        inputJsonSchema: {'type': 'object', 'properties': {}, 'required': []},
+      ),
     ];
   }
 }
