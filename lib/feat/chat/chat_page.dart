@@ -1,17 +1,17 @@
 import 'package:chat_ai/common/common.dart';
 import 'package:chat_ai/feat/chat/chat_input_bar/chat_input_bar.dart';
 import 'package:chat_ai/feat/chat/chat_item.dart';
-import 'package:chat_ai/service/ai_service/ai_service_qwen.dart';
+import 'package:chat_ai/service/ai_service/ai_service_agnes.dart';
 import 'package:flutter/rendering.dart';
 
 enum AiServiceType {
-  qwen(0);
+  agnes(0);
 
   final int value;
   const AiServiceType(this.value);
 
   AiServiceBase get service => switch (this) {
-    AiServiceType.qwen => ChatAiServiceQwen(),
+    AiServiceType.agnes => ChatAiServiceAgnes(),
   };
 
   static AiServiceType fromValue(int value) {
@@ -19,7 +19,7 @@ enum AiServiceType {
   }
 
   String displayName(BuildContext context) => switch (this) {
-    AiServiceType.qwen => S.of(context).qwen,
+    AiServiceType.agnes => S.of(context).agnes,
   };
 }
 

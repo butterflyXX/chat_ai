@@ -48,3 +48,4 @@ app.*.map.json
 .fvm/
 
 lib/app_key.dart
+.test_sse/

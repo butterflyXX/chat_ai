@@ -124,9 +124,9 @@ class S {
     return Intl.message('Spark', name: 'spark', desc: '', args: []);
   }
 
-  /// `Qwen`
-  String get qwen {
-    return Intl.message('Qwen', name: 'qwen', desc: '', args: []);
+  /// `Agnes`
+  String get agnes {
+    return Intl.message('Agnes', name: 'agnes', desc: '', args: []);
   }
 
   /// `No voice detected`
