@@ -44,10 +44,10 @@ class ToolManager {
     return jsonEncode({'success': true, 'photo_path': photoPath, 'message': '拍照成功'});
   }
 
-  /// 本地可执行工具定义，随 Chat Completions 请求发给兼容 API
-  List<Tool> getToolDefinitions() {
+  /// 本地可执行工具定义，随 Responses API 请求发给兼容服务
+  List<ResponseTool> getResponseToolDefinitions() {
     return [
-      Tool.function(
+      ResponseTool.function(
         name: ToolName.takePhoto.value,
         description: '调起相机拍照。当用户需要拍照时使用此工具。',
         parameters: const {

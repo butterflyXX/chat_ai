@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 import 'package:chat_ai/common/util/log_util.dart';
 import 'package:chat_ai/service/ai_service/ai_service_base.dart';
 import 'package:chat_ai/tools/tool_manager.dart';
@@ -16,8 +15,8 @@ class AiServiceOpenAi extends AiServiceBase {
   final _toolManager = ToolManager();
   final OpenAIClient _client;
 
-  /// API 侧完整消息历史（含 tool role 消息，不直接展示到 UI）
-  final List<ChatMessage> _chatMessages = [];
+  /// Responses API 侧完整 input items（含 function_call / function_call_output）
+  final List<Item> _inputItems = [];
 
   AiServiceOpenAi({
     required this.apiKey,
@@ -36,7 +35,7 @@ class AiServiceOpenAi extends AiServiceBase {
     await currentSubscription?.cancel();
     currentSubscription = null;
 
-    _chatMessages.add(ChatMessage.user(message));
+    _inputItems.add(MessageItem.userText(message));
 
     try {
       await _runStreamLoop();
@@ -47,7 +46,7 @@ class AiServiceOpenAi extends AiServiceBase {
     }
   }
 
-  /// 全程走 Chat Completions stream；content 边收边展示，流结束后处理 tool_calls。
+  /// 全程走 Responses API stream；content 边收边展示，流结束后处理 function_call。
   Future<void> _runStreamLoop() async {
     var isFirstRound = true;
 
@@ -55,44 +54,36 @@ class AiServiceOpenAi extends AiServiceBase {
       final round = await _streamOneRound(startMessage: isFirstRound);
       isFirstRound = false;
 
-      if (round.toolCalls.isEmpty) {
-        _chatMessages.add(ChatMessage.assistant(content: round.content));
+      if (round.functionCalls.isEmpty) {
+        if (round.content.isNotEmpty) {
+          _inputItems.add(MessageItem.assistantText(round.content));
+        }
         reseveMessage(AiMessageState.end, '');
         return;
       }
 
-      await _handleToolCalls(round.toolCalls, content: round.content);
+      await _handleFunctionCalls(round.functionCalls, content: round.content);
     }
   }
 
-  Future<({String content, List<ToolCall> toolCalls})> _streamOneRound({
+  Future<({String content, List<FunctionCallOutputItemResponse> functionCalls})> _streamOneRound({
     required bool startMessage,
   }) async {
-    final accumulator = ChatStreamAccumulator();
+    final accumulator = ResponseStreamAccumulator();
     final completer = Completer<void>();
 
     if (startMessage) reseveMessage(AiMessageState.start, '');
 
-    final request = ChatCompletionCreateRequest(
+    final request = CreateResponseRequest(
       model: model,
-      messages: List<ChatMessage>.from(_chatMessages),
-      tools: _toolManager.getToolDefinitions(),
+      input: ResponseInput.items(List<Item>.from(_inputItems)),
+      tools: _toolManager.getResponseToolDefinitions(),
     );
 
-    currentSubscription = _client.chat.completions.createStream(request).listen(
+    currentSubscription = _client.responses.createStream(request).listen(
       (event) {
         accumulator.add(event);
-        final delta = event.firstChoice?.delta;
-        final contentDelta = event.textDelta;
-        final reasoningDelta = delta?.reasoningContent ?? delta?.reasoning;
-        if ((contentDelta != null && contentDelta.isNotEmpty) ||
-            (reasoningDelta != null && reasoningDelta.isNotEmpty)) {
-          reseveMessage(
-            AiMessageState.streaming,
-            contentDelta ?? '',
-            reasoningContent: reasoningDelta ?? '',
-          );
-        }
+        _emitStreamDelta(event);
       },
       onError: (e) {
         LogUtil.d('Stream 错误: $e');
@@ -109,39 +100,55 @@ class AiServiceOpenAi extends AiServiceBase {
 
     await completer.future;
 
-    final toolCalls = accumulator.toolCalls
-        .where((tc) => tc.function.name.isNotEmpty)
-        .toList(growable: false);
-    return (content: accumulator.content, toolCalls: toolCalls);
+    final response = accumulator.response;
+    final content = accumulator.text.isNotEmpty ? accumulator.text : (response?.outputText ?? '');
+    final functionCalls = response?.functionCalls ?? const [];
+    return (content: content, functionCalls: functionCalls);
   }
 
-  Future<void> _handleToolCalls(List<ToolCall> toolCalls, {required String content}) async {
-    LogUtil.d('工具调用: ${toolCalls.map((t) => t.function.name).toList()}');
-    _chatMessages.add(
-      ChatMessage.assistant(
-        content: content.isEmpty ? null : content,
-        toolCalls: toolCalls,
-      ),
-    );
-
-    for (final tc in toolCalls) {
-      final toolResult = await _toolManager.executeTool(
-        tc.function.name,
-        jsonEncode(_toolCallArguments(tc)),
-      );
-      LogUtil.d('工具 ${tc.function.name} 结果: $toolResult');
-      _chatMessages.add(ChatMessage.tool(toolCallId: tc.id, content: toolResult));
+  void _emitStreamDelta(ResponseStreamEvent event) {
+    switch (event) {
+      case OutputTextDeltaEvent(:final delta):
+        if (delta.isNotEmpty) reseveMessage(AiMessageState.streaming, delta);
+      case ReasoningTextDeltaEvent(:final delta):
+      case ReasoningSummaryTextDeltaEvent(:final delta):
+        if (delta.isNotEmpty) {
+          reseveMessage(AiMessageState.streaming, '', reasoningContent: delta);
+        }
+      default:
+        break;
     }
   }
 
-  Map<String, dynamic> _toolCallArguments(ToolCall tc) {
-    final raw = tc.function.arguments;
-    if (raw.isEmpty) return {};
-    try {
-      final decoded = jsonDecode(raw);
-      return decoded is Map<String, dynamic> ? decoded : {};
-    } catch (_) {
-      return {};
+  Future<void> _handleFunctionCalls(
+    List<FunctionCallOutputItemResponse> functionCalls, {
+    required String content,
+  }) async {
+    LogUtil.d('工具调用: ${functionCalls.map((t) => t.name).toList()}');
+
+    if (content.isNotEmpty) {
+      _inputItems.add(MessageItem.assistantText(content));
+    }
+
+    for (final call in functionCalls) {
+      _inputItems.add(
+        FunctionCallItem(
+          id: call.id,
+          callId: call.callId,
+          name: call.name,
+          arguments: call.arguments,
+        ),
+      );
+
+      final toolResult = await _toolManager.executeTool(call.name, call.arguments);
+      LogUtil.d('工具 ${call.name} 结果: $toolResult');
+
+      _inputItems.add(
+        FunctionCallOutputItem.string(
+          callId: call.callId,
+          output: toolResult,
+        ),
+      );
     }
   }
 
