@@ -71,8 +71,7 @@ class _ChatAiWidgetState extends State<ChatAiWidget> {
   static const _kThinkingFontSize = 12.0;
   static const _kThinkingMaxLines = 5;
 
-  double get _thinkingMaxHeight =>
-      _kThinkingFontSize.w * _kThinkingLineHeight * _kThinkingMaxLines + 20.w;
+  double get _thinkingMaxHeight => _kThinkingFontSize.w * _kThinkingLineHeight * _kThinkingMaxLines + 20.w;
 
   @override
   void didUpdateWidget(ChatAiWidget oldWidget) {
@@ -82,13 +81,10 @@ class _ChatAiWidgetState extends State<ChatAiWidget> {
       setState(() => _thinkingExpanded = false);
     }
     // 思考内容更新时，自动滚到底部显示最新内容
-    if (_thinkingExpanded &&
-        widget.message.reasoningContent != oldWidget.message.reasoningContent) {
+    if (_thinkingExpanded && widget.message.reasoningContent != oldWidget.message.reasoningContent) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (_thinkingScrollController.hasClients) {
-          _thinkingScrollController.jumpTo(
-            _thinkingScrollController.position.maxScrollExtent,
-          );
+          _thinkingScrollController.jumpTo(_thinkingScrollController.position.maxScrollExtent);
         }
       });
     }
@@ -104,7 +100,6 @@ class _ChatAiWidgetState extends State<ChatAiWidget> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final appTheme = context.appTheme;
-    final hasReasoning = widget.message.reasoningContent.isNotEmpty;
     final isThinking = widget.message.message.isEmpty && widget.message.state != AiMessageState.end;
 
     return Container(
@@ -113,10 +108,8 @@ class _ChatAiWidgetState extends State<ChatAiWidget> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (hasReasoning) ...[
-            _buildThinkingSection(appTheme, isThinking),
-            if (widget.message.message.isNotEmpty) SizedBox(height: 12.w),
-          ],
+          _buildThinkingSection(appTheme, isThinking),
+          if (widget.message.message.isNotEmpty) SizedBox(height: 12.w),
           if (widget.message.message.isNotEmpty)
             MarkdownBody(
               data: widget.message.message,
@@ -140,7 +133,9 @@ class _ChatAiWidgetState extends State<ChatAiWidget> {
                 blockquoteDecoration: BoxDecoration(
                   color: appTheme.fillsSecondary,
                   borderRadius: BorderRadius.circular(4.w),
-                  border: Border(left: BorderSide(color: appTheme.highlightBlue, width: 4.w)),
+                  border: Border(
+                    left: BorderSide(color: appTheme.highlightBlue, width: 4.w),
+                  ),
                 ),
                 blockquotePadding: EdgeInsets.all(12.w),
                 a: TextStyleTheme.regular14.copyWith(
@@ -148,7 +143,9 @@ class _ChatAiWidgetState extends State<ChatAiWidget> {
                   decoration: TextDecoration.underline,
                 ),
                 horizontalRuleDecoration: BoxDecoration(
-                  border: Border(top: BorderSide(width: 1.px, color: appTheme.separatorsSecondary)),
+                  border: Border(
+                    top: BorderSide(width: 1.px, color: appTheme.separatorsSecondary),
+                  ),
                 ),
               ),
               builders: {'pre': CodeElementBuilder(isDark: isDark, appTheme: appTheme)},
@@ -185,16 +182,13 @@ class _ChatAiWidgetState extends State<ChatAiWidget> {
               ),
             ],
           ),
-          if (_thinkingExpanded) ...[
+          if (_thinkingExpanded && widget.message.reasoningContent.isNotEmpty) ...[
             SizedBox(height: 8.w),
             Container(
               width: double.infinity,
               constraints: BoxConstraints(maxHeight: _thinkingMaxHeight),
               padding: EdgeInsets.all(10.w),
-              decoration: BoxDecoration(
-                color: appTheme.fillsSecondary,
-                borderRadius: BorderRadius.circular(8.w),
-              ),
+              decoration: BoxDecoration(color: appTheme.fillsSecondary, borderRadius: BorderRadius.circular(8.w)),
               child: SingleChildScrollView(
                 controller: _thinkingScrollController,
                 physics: const ClampingScrollPhysics(),

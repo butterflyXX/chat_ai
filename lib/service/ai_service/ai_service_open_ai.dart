@@ -18,16 +18,8 @@ class AiServiceOpenAi extends AiServiceBase {
   /// Responses API 侧完整 input items（含 function_call / function_call_output）
   final List<Item> _inputItems = [];
 
-  AiServiceOpenAi({
-    required this.apiKey,
-    required this.baseUrl,
-    required this.model,
-    http.Client? client,
-  }) : _client = OpenAIClient.withApiKey(
-         apiKey,
-         baseUrl: baseUrl,
-         httpClient: client,
-       );
+  AiServiceOpenAi({required this.apiKey, required this.baseUrl, required this.model, http.Client? client})
+    : _client = OpenAIClient.withApiKey(apiKey, baseUrl: baseUrl, httpClient: client);
 
   @override
   Future<void> sendMessage(String message) async {
@@ -80,23 +72,26 @@ class AiServiceOpenAi extends AiServiceBase {
       tools: _toolManager.getResponseToolDefinitions(),
     );
 
-    currentSubscription = _client.responses.createStream(request).listen(
-      (event) {
-        accumulator.add(event);
-        _emitStreamDelta(event);
-      },
-      onError: (e) {
-        LogUtil.d('Stream 错误: $e');
-        currentSubscription = null;
-        if (!completer.isCompleted) completer.completeError(e);
-      },
-      onDone: () {
-        LogUtil.d('Stream 完成');
-        currentSubscription = null;
-        if (!completer.isCompleted) completer.complete();
-      },
-      cancelOnError: false,
-    );
+    currentSubscription = _client.responses
+        .createStream(request)
+        .listen(
+          (event) {
+            LogUtil.d('Stream 事件: ${event.toJson()}');
+            accumulator.add(event);
+            _emitStreamDelta(event);
+          },
+          onError: (e) {
+            LogUtil.d('Stream 错误: $e');
+            currentSubscription = null;
+            if (!completer.isCompleted) completer.completeError(e);
+          },
+          onDone: () {
+            LogUtil.d('Stream 完成');
+            currentSubscription = null;
+            if (!completer.isCompleted) completer.complete();
+          },
+          cancelOnError: false,
+        );
 
     await completer.future;
 
@@ -131,24 +126,12 @@ class AiServiceOpenAi extends AiServiceBase {
     }
 
     for (final call in functionCalls) {
-      _inputItems.add(
-        FunctionCallItem(
-          id: call.id,
-          callId: call.callId,
-          name: call.name,
-          arguments: call.arguments,
-        ),
-      );
+      _inputItems.add(FunctionCallItem(id: call.id, callId: call.callId, name: call.name, arguments: call.arguments));
 
       final toolResult = await _toolManager.executeTool(call.name, call.arguments);
       LogUtil.d('工具 ${call.name} 结果: $toolResult');
 
-      _inputItems.add(
-        FunctionCallOutputItem.string(
-          callId: call.callId,
-          output: toolResult,
-        ),
-      );
+      _inputItems.add(FunctionCallOutputItem.string(callId: call.callId, output: toolResult));
     }
   }
 

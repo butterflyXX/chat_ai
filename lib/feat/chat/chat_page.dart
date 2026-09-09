@@ -48,15 +48,10 @@ class _ChatPageState extends ConsumerState<ChatPage> {
   initState() {
     super.initState();
     aiService.stream.listen((message) {
-      if (_isUserScrolling) return;
       setState(() {});
-      if (!_isAtBottom) return;
-      int delayed = 0;
-      if (message.role == AiMessageRole.user) {
-        delayed = 250;
-      }
+      if (_isUserScrolling || !_isAtBottom) return;
 
-      Future.delayed(Duration(milliseconds: delayed), () {
+      WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
         _scrollController.animateTo(
           _scrollController.position.maxScrollExtent,
           duration: const Duration(milliseconds: 100),
