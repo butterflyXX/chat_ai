@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:collection';
 import 'dart:convert';
 import 'dart:typed_data';
 
@@ -22,15 +21,10 @@ class XunfeiAsrService extends AsrServiceBase {
   /// 音频帧大小（16k采样率、16bit位深、40ms）
   static const int audioFrameSize = 1280;
 
-  /// 帧间隔（毫秒）
-  static const int frameIntervalMs = 40;
-
   WebSocketChannel? _channel;
   bool _isConnected = false;
   String? _sessionId;
   StreamSubscription? _messageSubscription;
-  int _lastSendTime = 0; // 上次发送音频的时间戳（毫秒）
-  final Queue<Uint8List> _audioBuffer = Queue(); // 音频数据缓冲区
 
   @override
   Future<void> onStart() async {
@@ -48,8 +42,6 @@ class XunfeiAsrService extends AsrServiceBase {
       _channel = WebSocketChannel.connect(Uri.parse(url));
       _isConnected = true;
       _sessionId = null;
-      _audioBuffer.clear(); // 清空音频缓冲区
-      _lastSendTime = 0; // 重置发送时间
 
       // 等待连接建立
       await Future.delayed(const Duration(milliseconds: 1500));
@@ -65,6 +57,7 @@ class XunfeiAsrService extends AsrServiceBase {
         onDone: () {
           LogUtil.d('WebSocket连接关闭');
           _isConnected = false;
+          completeSessionIfNeeded();
         },
       );
 
@@ -78,71 +71,13 @@ class XunfeiAsrService extends AsrServiceBase {
 
   @override
   Future<void> onStop() async {
-    try {
-      if (_isConnected) {
-        await _sendEndMarker();
-      }
-      LogUtil.d('已停止');
-    } catch (e) {
-      LogUtil.d('停止时出错: $e');
-    }
+    await _sendEndMarker();
+    LogUtil.d('已停止');
   }
 
   @override
   Future<void> sendAudio(Uint8List audioData) async {
-    if (!_isConnected) {
-      return;
-    }
-    // 录音是80ms一帧,需要拆分成两帧发送
-    final frame1 = audioData.sublist(0, audioFrameSize);
-    final frame2 = audioData.sublist(audioFrameSize, audioData.length);
-
-    // 将数据添加到缓冲区
-    _audioBuffer.add(frame1);
-    _audioBuffer.add(frame2);
-
-    // LogUtil.d('缓冲区大小: ${_audioBuffer.length}');
-
-    // 当缓冲区累积到足够的数据时，按帧发送
-    while (_audioBuffer.length == 2) {
-      _sendFrameWithRateControl().then((value) {
-        // LogUtil.d('发送帧完成');
-      });
-    }
-  }
-
-  /// 按照精确的速率发送音频帧
-  Future<void> _sendFrameWithRateControl() async {
-    // LogUtil.d('发送帧开始: ${_audioBuffer.length}');
-    final frame = _audioBuffer.removeFirst();
-    final currentTime = DateTime.now().millisecondsSinceEpoch;
-
-    // 计算期望的发送时间
-    if (_lastSendTime == 0) {
-      // 首次发送
-      _lastSendTime = currentTime;
-    } else {
-      // 计算应该等待的时间
-      final expectedTime = _lastSendTime + frameIntervalMs;
-      final waitTime = expectedTime - currentTime;
-
-      if (waitTime > 1) {
-        // 需要等待，确保严格按照40ms间隔发送
-        await Future.delayed(Duration(milliseconds: waitTime));
-      }
-      _lastSendTime = expectedTime;
-    }
-
-    try {
-      // 直接发送二进制音频数据
-      _channel!.sink.add(frame);
-      if (_audioBuffer.isNotEmpty) {
-        _sendFrameWithRateControl();
-      }
-    } catch (e) {
-      LogUtil.d('发送音频帧失败: $e');
-      onError?.call(e.toString());
-    }
+    _channel!.sink.add(audioData);
   }
 
   /// 发送结束标记
@@ -176,23 +111,33 @@ class XunfeiAsrService extends AsrServiceBase {
         if (data == null) return;
 
         final action = data['action'] as String?;
-
-        // 检查 data 中的错误码
         final dataCode = data['code'];
-        if (dataCode != null && int.parse(dataCode.toString()) != 0) {
-          final errorMsg = data['message'] as String? ?? '未知错误';
-          LogUtil.d('错误码: $dataCode, 消息: $errorMsg');
-          onError?.call('错误码: $dataCode - $errorMsg');
-          _closeConnection();
-          return;
-        }
 
-        // 更新会话ID
         if (action == 'started') {
           if (data.containsKey('sessionId')) {
             _sessionId = data['sessionId'] as String;
             LogUtil.d('会话ID: $_sessionId');
           }
+          return;
+        }
+
+        if (action == 'end') {
+          final code = dataCode == null ? 0 : int.parse(dataCode.toString());
+          if (code != 0) {
+            final errorMsg = data['message'] as String? ?? '未知错误';
+            LogUtil.d('错误码: $code, 消息: $errorMsg');
+            onError?.call('错误码: $code - $errorMsg');
+          }
+          _closeConnection();
+          completeSessionIfNeeded();
+          return;
+        }
+
+        if (dataCode != null && int.parse(dataCode.toString()) != 0) {
+          final errorMsg = data['message'] as String? ?? '未知错误';
+          LogUtil.d('错误码: $dataCode, 消息: $errorMsg');
+          onError?.call('错误码: $dataCode - $errorMsg');
+          _closeConnection();
           return;
         }
 
@@ -338,7 +283,6 @@ class XunfeiAsrService extends AsrServiceBase {
     return '$year-$month-${day}T$hour:$minute:$second$offsetSign$offsetHours$offsetMinutes';
   }
 
-  /// 关闭WebSocket连接
   Future<void> _closeConnection() async {
     try {
       _isConnected = false;
