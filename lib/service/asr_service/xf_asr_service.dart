@@ -9,6 +9,8 @@ import 'package:crypto/crypto.dart';
 import 'package:uuid/uuid.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
+import 'recognition_result_model.dart';
+
 /// 讯飞实时语音转写(RTASR)服务实现
 class XunfeiAsrService extends AsrServiceBase {
   XunfeiAsrService({super.onError});

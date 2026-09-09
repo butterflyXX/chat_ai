@@ -3,15 +3,9 @@ import 'dart:typed_data';
 
 import 'package:chat_ai/common/common.dart';
 import 'package:chat_ai/common/util/log_util.dart';
+import 'package:chat_ai/service/service_manager.dart';
 
-/// 识别结果数据
-class RecognitionResult {
-  final String text;
-  final bool isFinal; // 0-确定性结果；1-中间结果
-  final bool isEnd;
-
-  RecognitionResult(this.text, this.isFinal, this.isEnd);
-}
+import 'recognition_result_model.dart';
 
 /// ASR服务基类
 abstract class AsrServiceBase {

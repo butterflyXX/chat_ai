@@ -2,13 +2,15 @@ import 'package:bot_toast/bot_toast.dart';
 import 'package:chat_ai/common/theme/theme.dart';
 import 'package:chat_ai/provider/locale_state/locale_state.dart';
 import 'package:chat_ai/provider/theme_state/theme_state.dart';
+import 'package:chat_ai/route.dart';
+import 'package:chat_ai/service/service_manager.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:chat_ai/common/common.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await ServiceManager.registerServers();
-  runApp(AiProvider.scope(const MyApp()));
+  runApp(const ProviderScope(child: MyApp()));
 }
 
 class MyApp extends StatelessWidget {

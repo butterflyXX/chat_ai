@@ -1,4 +1,5 @@
 import 'package:chat_ai/common/common.dart';
+import 'package:chat_ai/service/service_manager.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'locale_state.g.dart';

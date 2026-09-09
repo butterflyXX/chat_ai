@@ -1,7 +1,8 @@
 import 'package:chat_ai/common/common.dart';
 import 'package:chat_ai/common/widget/section_widget.dart';
 import 'package:chat_ai/common/widget/select_item_widget.dart';
-import 'package:chat_ai/feat/chat/chat_page.dart';
+import 'package:chat_ai/route.dart';
+import 'package:chat_ai/service/ai_service/ai_service_type.dart';
 
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});

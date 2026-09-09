@@ -5,6 +5,8 @@ import 'package:chat_ai/tools/tool_manager.dart';
 import 'package:http/http.dart' as http;
 import 'package:openai_dart/openai_dart.dart';
 
+import 'ai_message_model.dart';
+
 export 'package:chat_ai/service/ai_service/ai_service_base.dart';
 
 class AiServiceOpenAi extends AiServiceBase {

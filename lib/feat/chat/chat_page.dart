@@ -1,32 +1,9 @@
-import 'package:chat_ai/app_key.dart';
 import 'package:chat_ai/common/common.dart';
 import 'package:chat_ai/feat/chat/chat_input_bar/chat_input_bar.dart';
 import 'package:chat_ai/feat/chat/chat_item.dart';
-import 'package:chat_ai/service/ai_service/ai_service_open_ai.dart';
+import 'package:chat_ai/service/ai_service/ai_message_model.dart';
+import 'package:chat_ai/service/ai_service/ai_service_type.dart';
 import 'package:flutter/rendering.dart';
-
-enum AiServiceType {
-  agnes(0);
-
-  final int value;
-  const AiServiceType(this.value);
-
-  AiServiceBase get service => switch (this) {
-    AiServiceType.agnes => AiServiceOpenAi(
-      apiKey: agnesAppKey,
-      baseUrl: 'https://apihub.agnes-ai.com/v1',
-      model: 'agnes-2.5-flash',
-    ),
-  };
-
-  static AiServiceType fromValue(int value) {
-    return values.firstWhere((e) => e.value == value);
-  }
-
-  String displayName(BuildContext context) => switch (this) {
-    AiServiceType.agnes => S.of(context).agnes,
-  };
-}
 
 class ChatPage extends ConsumerStatefulWidget {
   final int aiServiceType;

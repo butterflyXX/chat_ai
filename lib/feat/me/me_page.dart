@@ -2,6 +2,7 @@ import 'package:chat_ai/common/common.dart';
 import 'package:chat_ai/common/widget/section_widget.dart';
 import 'package:chat_ai/provider/locale_state/locale_state.dart';
 import 'package:chat_ai/provider/theme_state/theme_state.dart';
+import 'package:chat_ai/route.dart';
 
 class MePage extends ConsumerStatefulWidget {
   const MePage({super.key});
