@@ -1,61 +1,33 @@
 import 'dart:convert';
+
 import 'package:chat_ai/common/util/log_util.dart';
-import 'package:chat_ai/tools/photos/take_photo.dart';
+import 'package:chat_ai/tools/ai_tool.dart';
+import 'package:chat_ai/tools/tool/get_location.dart';
+import 'package:chat_ai/tools/tool/take_photo.dart';
 import 'package:openai_dart/openai_dart.dart';
 
-enum ToolName {
-  takePhoto('take_photo');
-
-  final String value;
-  const ToolName(this.value);
-}
-
-/// 工具管理器：处理 LLM 的 tool calls
+/// 工具注册与调度：向 LLM 暴露定义，并执行 function call
 class ToolManager {
-  final TakePhotoTool _takePhotoTool = TakePhotoTool();
+  final Map<String, AiTool> _tools = {
+    ToolName.takePhoto.value: TakePhotoTool(),
+    ToolName.getLocation.value: GetLocationTool(),
+  };
 
-  /// 执行工具调用
-  /// [toolName] 工具名称
-  /// [arguments] 工具参数（JSON 字符串）
-  /// 返回执行结果（JSON 字符串）
+  List<ResponseTool> getResponseToolDefinitions() => _tools.values.map((tool) => tool.definition).toList();
+
   Future<String> executeTool(String toolName, String? arguments) async {
     LogUtil.d('执行工具: $toolName, 参数: $arguments');
 
+    final tool = _tools[toolName];
+    if (tool == null) {
+      return jsonEncode({'error': '未知的工具: $toolName'});
+    }
+
     try {
-      if (toolName == 'take_photo') {
-        return await _executeTakePhoto(arguments);
-      } else {
-        return jsonEncode({'error': '未知的工具: $toolName'});
-      }
+      return await tool.execute(arguments);
     } catch (e) {
       LogUtil.d('工具执行失败: $e');
       return jsonEncode({'error': '工具执行失败: $e'});
     }
-  }
-
-  /// 执行拍照工具
-  Future<String> _executeTakePhoto(String? arguments) async {
-    final photoPath = await _takePhotoTool.execute();
-
-    if (photoPath == null) {
-      return jsonEncode({'success': false, 'message': '拍照失败或用户取消'});
-    }
-
-    return jsonEncode({'success': true, 'photo_path': photoPath, 'message': '拍照成功'});
-  }
-
-  /// 本地可执行工具定义，随 Responses API 请求发给兼容服务
-  List<ResponseTool> getResponseToolDefinitions() {
-    return [
-      ResponseTool.function(
-        name: ToolName.takePhoto.value,
-        description: '调起相机拍照。当用户需要拍照时使用此工具。',
-        parameters: const {
-          'type': 'object',
-          'properties': {},
-          'required': [],
-        },
-      ),
-    ];
   }
 }

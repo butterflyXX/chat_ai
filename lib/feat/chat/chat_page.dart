@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:chat_ai/common/common.dart';
 import 'package:chat_ai/feat/chat/chat_input_bar/chat_input_bar.dart';
 import 'package:chat_ai/feat/chat/chat_item.dart';
@@ -18,6 +20,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
   late final aiServiceType = AiServiceType.fromValue(widget.aiServiceType);
   late final aiService = aiServiceType.service;
   final ScrollController _scrollController = ScrollController();
+  StreamSubscription<AiMessageModel>? _messageSubscription;
 
   bool _isUserScrolling = false;
   bool _isAtBottom = true;
@@ -25,20 +28,30 @@ class _ChatPageState extends ConsumerState<ChatPage> {
   @override
   initState() {
     super.initState();
-    aiService.stream.listen((message) {
+    _messageSubscription = aiService.stream.listen((message) {
       setState(() {});
-      if (message.role == AiMessageRole.assistant && message.state != AiMessageState.start) {
+      if (message.state == AiMessageState.end) {
         HapticFeedback.lightImpact();
       }
       if (_isUserScrolling || !_isAtBottom) return;
+      _scrollToBottom(streaming: message.state == AiMessageState.streaming);
+    });
+  }
 
-      WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+  void _scrollToBottom({required bool streaming}) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_scrollController.hasClients) return;
+      final target = _scrollController.position.maxScrollExtent;
+      // 流式输出用 jumpTo，避免 animateTo 与高频 rebuild 叠加导致 Android 卡死
+      if (streaming) {
+        _scrollController.jumpTo(target);
+      } else {
         _scrollController.animateTo(
-          _scrollController.position.maxScrollExtent,
+          target,
           duration: const Duration(milliseconds: 100),
           curve: Curves.easeInOut,
         );
-      });
+      }
     });
   }
 
@@ -97,7 +110,9 @@ class _ChatPageState extends ConsumerState<ChatPage> {
 
   @override
   void dispose() {
-    super.dispose();
+    _messageSubscription?.cancel();
+    _scrollController.dispose();
     aiService.dispose();
+    super.dispose();
   }
 }
