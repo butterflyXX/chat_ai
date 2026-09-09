@@ -11,7 +11,11 @@ abstract class AiServiceBase {
   Stream<AiMessageModel> get stream => _streamcontroller.stream;
   StreamSubscription? currentSubscription;
 
+  Timer? _streamEmitTimer;
+  static const _streamEmitInterval = Duration(milliseconds: 100);
+
   Future<void> sendMessage(String message) async {
+    _cancelStreamEmitTimer();
     _addMessage(AiMessageModel(role: AiMessageRole.user, state: AiMessageState.end, message: message), isUser: true);
     _messageBuffer.clear();
     _reasoningBuffer.clear();
@@ -29,28 +33,54 @@ abstract class AiServiceBase {
     );
     switch (state) {
       case AiMessageState.start:
-        _addMessage(messageModel);
+        historyMessages.add(messageModel);
       case AiMessageState.streaming:
       case AiMessageState.end:
         historyMessages.removeLast();
-        _addMessage(messageModel);
+        historyMessages.add(messageModel);
+        if (state == AiMessageState.end) {
+          aiing = false;
+        }
     }
+    _scheduleStreamEmit(immediate: state != AiMessageState.streaming);
+  }
+
+  void _scheduleStreamEmit({required bool immediate}) {
+    if (immediate) {
+      _cancelStreamEmitTimer();
+      _emitLatestAssistantMessage();
+      return;
+    }
+    if (_streamEmitTimer?.isActive ?? false) return;
+    _streamEmitTimer = Timer(_streamEmitInterval, () {
+      _streamEmitTimer = null;
+      _emitLatestAssistantMessage();
+    });
+  }
+
+  void _emitLatestAssistantMessage() {
+    if (historyMessages.isEmpty) return;
+    final last = historyMessages.last;
+    if (last.role != AiMessageRole.assistant) return;
+    _streamcontroller.add(last);
+  }
+
+  void _cancelStreamEmitTimer() {
+    _streamEmitTimer?.cancel();
+    _streamEmitTimer = null;
   }
 
   void _addMessage(AiMessageModel messageModel, {bool isUser = false}) {
     historyMessages.add(messageModel);
     if (isUser) {
       aiing = true;
-    } else {
-      if (messageModel.state == AiMessageState.end) {
-        aiing = false;
-      }
     }
     _streamcontroller.add(messageModel);
   }
 
   Future<void> stopAi() async {
     await _cancelSubscription();
+    _cancelStreamEmitTimer();
     if (!aiing) return;
     aiing = false;
 
@@ -66,6 +96,7 @@ abstract class AiServiceBase {
   }
 
   Future<void> dispose() async {
+    _cancelStreamEmitTimer();
     await _cancelSubscription();
     await _streamcontroller.close();
   }

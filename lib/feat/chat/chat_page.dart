@@ -4,6 +4,7 @@ import 'package:chat_ai/feat/chat/chat_item.dart';
 import 'package:chat_ai/service/ai_service/ai_message_model.dart';
 import 'package:chat_ai/service/ai_service/ai_service_type.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 
 class ChatPage extends ConsumerStatefulWidget {
   final int aiServiceType;
@@ -26,6 +27,9 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     super.initState();
     aiService.stream.listen((message) {
       setState(() {});
+      if (message.role == AiMessageRole.assistant && message.state != AiMessageState.start) {
+        HapticFeedback.lightImpact();
+      }
       if (_isUserScrolling || !_isAtBottom) return;
 
       WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
