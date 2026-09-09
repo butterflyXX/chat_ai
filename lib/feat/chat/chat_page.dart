@@ -15,7 +15,7 @@ enum AiServiceType {
     AiServiceType.agnes => AiServiceOpenAi(
       apiKey: agnesAppKey,
       baseUrl: 'https://apihub.agnes-ai.com/v1',
-      model: 'agnes-2.0-flash',
+      model: 'agnes-2.5-flash',
     ),
   };
 

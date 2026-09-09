@@ -45,10 +45,7 @@ class AiServiceOpenAi extends AiServiceBase {
     _chatMessages.add(HumanChatMessage(content: ChatMessageContent.text(message)));
 
     try {
-      // 第一步：用 invoke() 静默处理所有工具调用轮次（用户不感知）
-      await _resolveToolCalls();
-      // 第二步：工具全部就绪后，流式输出最终回答
-      _streamFinalResponse();
+      await _runStreamLoop();
     } catch (e) {
       LogUtil.d('发送消息失败: $e');
       reseveMessage(AiMessageState.end, '');
@@ -56,50 +53,84 @@ class AiServiceOpenAi extends AiServiceBase {
     }
   }
 
-  /// 循环调用 invoke() 直到模型不再请求工具为止
-  Future<void> _resolveToolCalls() async {
-    final tools = _toolManager.getToolDefinitions();
+  /// 全程走 stream：指令轮和最终回复都边收边拼到同一条气泡。
+  /// 流结束后若有 tool_calls，本地执行工具再继续下一轮。
+  Future<void> _runStreamLoop() async {
+    var isFirstRound = true;
+
     while (true) {
-      final result = await _chat.invoke(
-        PromptValue.chat(_chatMessages),
-        options: ChatOpenAIOptions(tools: tools),
-      );
-      final toolCalls = result.output.toolCalls;
-      if (toolCalls.isEmpty) break;
+      final round = await _streamOneRound(startMessage: isFirstRound);
+      isFirstRound = false;
 
-      LogUtil.d('工具调用: ${toolCalls.map((t) => t.name).toList()}');
-      _chatMessages.add(AIChatMessage(content: '', toolCalls: toolCalls));
-
-      for (final tc in toolCalls) {
-        final toolResult = await _toolManager.executeTool(tc.name, jsonEncode(tc.arguments));
-        LogUtil.d('工具 ${tc.name} 结果: $toolResult');
-        _chatMessages.add(ChatMessage.tool(toolCallId: tc.id, content: toolResult));
+      if (round.toolCalls.isEmpty) {
+        _chatMessages.add(AIChatMessage(content: round.content));
+        reseveMessage(AiMessageState.end, '');
+        return;
       }
+
+      await _handleToolCalls(round.toolCalls, content: round.content);
     }
   }
 
-  /// 流式输出最终回答到 UI
-  void _streamFinalResponse() {
-    reseveMessage(AiMessageState.start, '');
+  Future<({String content, List<AIChatMessageToolCall> toolCalls})> _streamOneRound({
+    required bool startMessage,
+  }) async {
+    var accumulated = const AIChatMessage(content: '');
+    final completer = Completer<void>();
+    final tools = _toolManager.getToolDefinitions();
+
+    if (startMessage) reseveMessage(AiMessageState.start, '');
+
     currentSubscription = _chat
-        .stream(PromptValue.chat(_chatMessages))
+        .stream(
+          PromptValue.chat(_chatMessages),
+          options: ChatOpenAIOptions(tools: tools),
+        )
         .listen(
           (result) {
-            final content = result.output.content;
-            if (content.isNotEmpty) reseveMessage(AiMessageState.streaming, content);
+            accumulated = accumulated.concat(result.output);
+            final delta = result.output.content;
+            if (delta.isNotEmpty) reseveMessage(AiMessageState.streaming, delta);
           },
           onError: (e) {
             LogUtil.d('Stream 错误: $e');
-            reseveMessage(AiMessageState.end, '');
+            currentSubscription = null;
+            if (!completer.isCompleted) completer.completeError(e);
           },
           onDone: () {
             LogUtil.d('Stream 完成');
-            reseveMessage(AiMessageState.end, '');
-            _chatMessages.add(AIChatMessage(content: historyMessages.last.message));
             currentSubscription = null;
+            if (!completer.isCompleted) completer.complete();
           },
           cancelOnError: false,
         );
+
+    await completer.future;
+
+    final toolCalls = accumulated.toolCalls.where((tc) => tc.name.isNotEmpty).toList(growable: false);
+    return (content: accumulated.content, toolCalls: toolCalls);
+  }
+
+  Future<void> _handleToolCalls(List<AIChatMessageToolCall> toolCalls, {required String content}) async {
+    LogUtil.d('工具调用: ${toolCalls.map((t) => t.name).toList()}');
+    _chatMessages.add(AIChatMessage(content: content, toolCalls: toolCalls));
+
+    for (final tc in toolCalls) {
+      final toolResult = await _toolManager.executeTool(tc.name, jsonEncode(_toolCallArguments(tc)));
+      LogUtil.d('工具 ${tc.name} 结果: $toolResult');
+      _chatMessages.add(ChatMessage.tool(toolCallId: tc.id, content: toolResult));
+    }
+  }
+
+  Map<String, dynamic> _toolCallArguments(AIChatMessageToolCall tc) {
+    if (tc.arguments.isNotEmpty) return tc.arguments;
+    if (tc.argumentsRaw.isEmpty) return {};
+    try {
+      final decoded = jsonDecode(tc.argumentsRaw);
+      return decoded is Map<String, dynamic> ? decoded : {};
+    } catch (_) {
+      return {};
+    }
   }
 
   @override
