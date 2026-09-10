@@ -26,6 +26,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "chatBarNoVoice": MessageLookupByLibrary.simpleMessage("未检测到声音"),
     "chatListEmpty": MessageLookupByLibrary.simpleMessage("暂无会话，点击右上角开始新对话"),
     "newChat": MessageLookupByLibrary.simpleMessage("新对话"),
+    "delete": MessageLookupByLibrary.simpleMessage("删除"),
     "general": MessageLookupByLibrary.simpleMessage("通用设置"),
     "home": MessageLookupByLibrary.simpleMessage("首页"),
     "locale": MessageLookupByLibrary.simpleMessage("语言"),

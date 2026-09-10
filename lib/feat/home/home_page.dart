@@ -40,42 +40,61 @@ class _HomePageState extends ConsumerState<HomePage> {
             );
           }
           return ListView.separated(
-            padding: EdgeInsets.symmetric(vertical: 8.w),
+            padding: EdgeInsets.symmetric(vertical: 8.w, horizontal: 16.w),
             itemCount: conversations.length,
             separatorBuilder: (context, index) => SizedBox(height: 8.w),
-            itemBuilder: (context, index) => _buildConversationItem(conversations[index]),
+            itemBuilder: (context, index) => _buildConversationItem(context, conversations[index]),
           );
         },
       ),
     );
   }
 
-  Widget _buildConversationItem(Conversation conversation) {
+  Widget _buildConversationItem(BuildContext context, Conversation conversation) {
     final aiType = AiServiceType.fromValue(conversation.aiServiceType);
     final time = DateFormat('MM-dd HH:mm').format(conversation.updatedAt);
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: () => ChatRoute(aiServiceType: conversation.aiServiceType, conversationId: conversation.id).push(context),
-      child: Container(
-        width: double.infinity,
-        margin: EdgeInsets.symmetric(horizontal: 16.w),
-        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.w),
-        decoration: BoxDecoration(color: context.appTheme.fillsPrimary, borderRadius: BorderRadius.circular(12.r)),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+
+    return Dismissible(
+      key: ValueKey(conversation.id),
+      direction: DismissDirection.endToStart,
+      onDismissed: (_) => _repo.deleteConversation(conversation.id),
+      background: Container(
+        alignment: Alignment.centerRight,
+        padding: EdgeInsets.only(right: 20.w),
+        decoration: BoxDecoration(color: context.appTheme.highlightRed, borderRadius: BorderRadius.circular(12.r)),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.end,
           children: [
-            Text(
-              conversation.title,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyleTheme.medium14.copyWith(color: context.appTheme.textPrimary),
-            ),
-            SizedBox(height: 4.w),
-            Text(
-              '${aiType.displayName(context)} · $time',
-              style: TextStyleTheme.regular12.copyWith(color: context.appTheme.textSecondary),
-            ),
+            Icon(Icons.delete_outline, color: Colors.white, size: 22.w),
+            SizedBox(width: 6.w),
+            Text(S.of(context).delete, style: TextStyleTheme.medium14.copyWith(color: Colors.white)),
           ],
+        ),
+      ),
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () =>
+            ChatRoute(aiServiceType: conversation.aiServiceType, conversationId: conversation.id).push(context),
+        child: Container(
+          width: double.infinity,
+          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.w),
+          decoration: BoxDecoration(color: context.appTheme.fillsPrimary, borderRadius: BorderRadius.circular(12.r)),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                conversation.title,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyleTheme.medium14.copyWith(color: context.appTheme.textPrimary),
+              ),
+              SizedBox(height: 4.w),
+              Text(
+                '${aiType.displayName(context)} · $time',
+                style: TextStyleTheme.regular12.copyWith(color: context.appTheme.textSecondary),
+              ),
+            ],
+          ),
         ),
       ),
     );

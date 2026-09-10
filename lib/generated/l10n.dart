@@ -141,6 +141,11 @@ class S {
   String get newChat {
     return Intl.message('New chat', name: 'newChat', desc: '', args: []);
   }
+
+  /// `Delete`
+  String get delete {
+    return Intl.message('Delete', name: 'delete', desc: '', args: []);
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<S> {

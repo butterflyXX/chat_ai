@@ -16,5 +16,6 @@
     "agnes": "Agnes",
     "chatBarNoVoice": "No voice detected",
     "chatListEmpty": "No chats yet. Tap + to start a new conversation",
-    "newChat": "New chat"
+    "newChat": "New chat",
+    "delete": "Delete"
 }

@@ -26,6 +26,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "chatBarNoVoice": MessageLookupByLibrary.simpleMessage("No voice detected"),
     "chatListEmpty": MessageLookupByLibrary.simpleMessage("No chats yet. Tap + to start a new conversation"),
     "newChat": MessageLookupByLibrary.simpleMessage("New chat"),
+    "delete": MessageLookupByLibrary.simpleMessage("Delete"),
     "general": MessageLookupByLibrary.simpleMessage("General"),
     "home": MessageLookupByLibrary.simpleMessage("Home"),
     "locale": MessageLookupByLibrary.simpleMessage("Locale"),
