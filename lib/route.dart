@@ -49,8 +49,12 @@ class SettingLocaleRoute extends GoRouteData with $SettingLocaleRoute {
 @TypedGoRoute<ChatRoute>(path: '/chat')
 class ChatRoute extends GoRouteData with $ChatRoute {
   final int aiServiceType;
-  const ChatRoute({required this.aiServiceType});
+  final String? conversationId;
+
+  const ChatRoute({required this.aiServiceType, this.conversationId});
 
   @override
-  Widget build(BuildContext context, GoRouterState state) => ChatPage(aiServiceType: aiServiceType);
+  Widget build(BuildContext context, GoRouterState state) {
+    return ChatPage(aiServiceType: aiServiceType, conversationId: conversationId);
+  }
 }

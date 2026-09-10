@@ -24,6 +24,10 @@ class MessageLookup extends MessageLookupByLibrary {
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
     "asr": MessageLookupByLibrary.simpleMessage("ASR"),
     "chatBarNoVoice": MessageLookupByLibrary.simpleMessage("No voice detected"),
+    "chatListEmpty": MessageLookupByLibrary.simpleMessage(
+      "No chats yet. Tap + to start a new conversation",
+    ),
+    "newChat": MessageLookupByLibrary.simpleMessage("New chat"),
     "general": MessageLookupByLibrary.simpleMessage("General"),
     "home": MessageLookupByLibrary.simpleMessage("Home"),
     "locale": MessageLookupByLibrary.simpleMessage("Locale"),

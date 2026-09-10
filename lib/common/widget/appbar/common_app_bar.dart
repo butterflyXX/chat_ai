@@ -1,8 +1,7 @@
 import 'package:chat_ai/common/common.dart';
 
 class CAAppBar {
-  static AppBar commonAppbar(
-    BuildContext context, {
+  static AppBar commonAppbar({
     String? title,
     Widget? textTitle,
     PreferredSizeWidget? bottom,
@@ -12,22 +11,30 @@ class CAAppBar {
     VoidCallback? onLeadingAction,
     bool isShowBack = true,
   }) {
-    final canPop = ModalRoute.of(context)?.canPop ?? false;
-    if (canPop && isShowBack) {
-      leading ??= GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: onLeadingAction ?? Navigator.of(context).maybePop,
-        child: Center(
-          child: SvgImage.asset(Assets.svgBackIcon, width: 24.w, height: 24.w, color: context.appTheme.textPrimary),
-        ),
-      );
-    }
-
     return AppBar(
       elevation: elevation,
       centerTitle: true,
       title: textTitle ?? Text(title ?? "", style: TextStyleTheme.semibold16),
-      leading: leading,
+      leading: Builder(
+        builder: (context) {
+          final canPop = ModalRoute.of(context)?.canPop ?? false;
+          if (canPop && isShowBack) {
+            return leading ??= GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: onLeadingAction ?? Navigator.of(context).maybePop,
+              child: Center(
+                child: SvgImage.asset(
+                  Assets.svgBackIcon,
+                  width: 24.w,
+                  height: 24.w,
+                  color: context.appTheme.textPrimary,
+                ),
+              ),
+            );
+          }
+          return const SizedBox.shrink();
+        },
+      ),
       leadingWidth: 60.w,
       actions: actions != null ? [...actions, SizedBox(width: 16.w)] : null,
       bottom: bottom,

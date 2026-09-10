@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import 'package:openai_dart/openai_dart.dart';
 
 import 'ai_message_model.dart';
+import 'context_window.dart';
 
 export 'package:chat_ai/service/ai_service/ai_service_base.dart';
 
@@ -23,13 +24,36 @@ class AiServiceOpenAi extends AiServiceBase {
   AiServiceOpenAi({required this.apiKey, required this.baseUrl, required this.model, http.Client? client})
     : _client = OpenAIClient.withApiKey(apiKey, baseUrl: baseUrl, httpClient: client);
 
+  void restoreFromHistory(List<AiMessageModel> messages) {
+    historyMessages
+      ..clear()
+      ..addAll(messages);
+    _rebuildInputItemsForApi();
+  }
+
+  /// 仅把窗口内的历史写入 API input；UI 仍展示完整 historyMessages。
+  void _rebuildInputItemsForApi() {
+    _inputItems.clear();
+    final window = ContextWindow.trim(historyMessages);
+    if (ContextWindow.hasTrimmed(historyMessages, window)) {
+      LogUtil.d('上下文已裁剪: 发送 ${window.length} 条 / 本地 ${historyMessages.length} 条');
+    }
+    for (final message in window) {
+      if (message.role == AiMessageRole.user) {
+        _inputItems.add(MessageItem.userText(message.message));
+      } else if (message.message.isNotEmpty) {
+        _inputItems.add(MessageItem.assistantText(message.message));
+      }
+    }
+  }
+
   @override
   Future<void> sendMessage(String message) async {
     await super.sendMessage(message);
     await currentSubscription?.cancel();
     currentSubscription = null;
 
-    _inputItems.add(MessageItem.userText(message));
+    _rebuildInputItemsForApi();
 
     try {
       await _runStreamLoop();

@@ -14,7 +14,7 @@ class _SettingLocalePageState extends ConsumerState<SettingLocalePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CAAppBar.commonAppbar(context, title: S.of(context).locale),
+      appBar: CAAppBar.commonAppbar(title: S.of(context).locale),
       body: SettingSectionWidget(children: LocaleType.values.map((e) => _buildLocaleItem(e)).toList()),
     );
   }

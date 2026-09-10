@@ -15,7 +15,7 @@ class _MePageState extends ConsumerState<MePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CAAppBar.commonAppbar(context, title: S.of(context).me),
+      appBar: CAAppBar.commonAppbar(title: S.of(context).me),
       body: ListView(
         children: [
           SettingSectionWidget(

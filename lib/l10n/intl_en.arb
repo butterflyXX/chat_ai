@@ -14,5 +14,7 @@
     "general": "General",
     "spark": "Spark",
     "agnes": "Agnes",
-    "chatBarNoVoice": "No voice detected"
+    "chatBarNoVoice": "No voice detected",
+    "chatListEmpty": "No chats yet. Tap + to start a new conversation",
+    "newChat": "New chat"
 }

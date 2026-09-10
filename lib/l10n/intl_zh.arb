@@ -14,5 +14,7 @@
     "general": "通用设置",
     "spark": "星火认知",
     "agnes": "Agnes",
-    "chatBarNoVoice": "未检测到声音"
+    "chatBarNoVoice": "未检测到声音",
+    "chatListEmpty": "暂无会话，点击右上角开始新对话",
+    "newChat": "新对话"
 }

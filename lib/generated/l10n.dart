@@ -138,6 +138,26 @@ class S {
       args: [],
     );
   }
+
+  /// `No chats yet. Tap + to start a new conversation`
+  String get chatListEmpty {
+    return Intl.message(
+      'No chats yet. Tap + to start a new conversation',
+      name: 'chatListEmpty',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `New chat`
+  String get newChat {
+    return Intl.message(
+      'New chat',
+      name: 'newChat',
+      desc: '',
+      args: [],
+    );
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<S> {

@@ -94,6 +94,7 @@ RouteBase get $chatRoute =>
 mixin $ChatRoute on GoRouteData {
   static ChatRoute _fromState(GoRouterState state) => ChatRoute(
     aiServiceType: int.parse(state.uri.queryParameters['ai-service-type']!),
+    conversationId: state.uri.queryParameters['conversation-id'],
   );
 
   ChatRoute get _self => this as ChatRoute;
@@ -101,7 +102,10 @@ mixin $ChatRoute on GoRouteData {
   @override
   String get location => GoRouteData.$location(
     '/chat',
-    queryParams: {'ai-service-type': _self.aiServiceType.toString()},
+    queryParams: {
+      'ai-service-type': _self.aiServiceType.toString(),
+      if (_self.conversationId != null) 'conversation-id': _self.conversationId,
+    },
   );
 
   @override

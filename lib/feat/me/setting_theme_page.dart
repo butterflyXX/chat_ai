@@ -14,7 +14,7 @@ class _SettingThemePageState extends ConsumerState<SettingThemePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CAAppBar.commonAppbar(context, title: S.of(context).theme),
+      appBar: CAAppBar.commonAppbar(title: S.of(context).theme),
       body: SettingSectionWidget(children: ThemeMode.values.map((e) => _buildThemeItem(e)).toList()),
     );
   }

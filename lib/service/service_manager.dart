@@ -1,5 +1,7 @@
+import 'package:chat_ai/database/app_database.dart';
 import 'package:chat_ai/service/asr_service/asr_service.dart';
 import 'package:chat_ai/service/asr_service/xf_asr_service.dart';
+import 'package:chat_ai/service/chat_repository.dart';
 import 'package:chat_ai/service/kv/kv_service_base.dart';
 import 'package:chat_ai/service/kv/sp_kv.dart';
 import 'package:chat_ai/service/record_service/record_service.dart';
@@ -14,6 +16,8 @@ class ServiceManager {
 
   static Future<void> registerServers() async {
     await _registerAsync<KvServiceBase>(() async => SpKvService.init());
+    await _registerAsync<AppDatabase>(() async => AppDatabase());
+    _register<ChatRepository>(ChatRepository(_serviceLocator.get<AppDatabase>()));
     _register<RecordServiceBase>(RecordService());
     _register<AsrServiceBase>(XunfeiAsrService());
   }
@@ -32,4 +36,6 @@ class ServiceManager {
   static RecordServiceBase get getRecord => _serviceLocator.get<RecordServiceBase>();
 
   static AsrServiceBase get getAsr => _serviceLocator.get<AsrServiceBase>();
+
+  static ChatRepository get getChatRepo => _serviceLocator.get<ChatRepository>();
 }
