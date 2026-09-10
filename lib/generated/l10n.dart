@@ -28,9 +28,7 @@ class S {
   static const AppLocalizationDelegate delegate = AppLocalizationDelegate();
 
   static Future<S> load(Locale locale) {
-    final name = (locale.countryCode?.isEmpty ?? false)
-        ? locale.languageCode
-        : locale.toString();
+    final name = (locale.countryCode?.isEmpty ?? false) ? locale.languageCode : locale.toString();
     final localeName = Intl.canonicalizedLocale(name);
     return initializeMessages(localeName).then((_) {
       Intl.defaultLocale = localeName;
@@ -131,32 +129,17 @@ class S {
 
   /// `No voice detected`
   String get chatBarNoVoice {
-    return Intl.message(
-      'No voice detected',
-      name: 'chatBarNoVoice',
-      desc: '',
-      args: [],
-    );
+    return Intl.message('No voice detected', name: 'chatBarNoVoice', desc: '', args: []);
   }
 
   /// `No chats yet. Tap + to start a new conversation`
   String get chatListEmpty {
-    return Intl.message(
-      'No chats yet. Tap + to start a new conversation',
-      name: 'chatListEmpty',
-      desc: '',
-      args: [],
-    );
+    return Intl.message('No chats yet. Tap + to start a new conversation', name: 'chatListEmpty', desc: '', args: []);
   }
 
   /// `New chat`
   String get newChat {
-    return Intl.message(
-      'New chat',
-      name: 'newChat',
-      desc: '',
-      args: [],
-    );
+    return Intl.message('New chat', name: 'newChat', desc: '', args: []);
   }
 }
 
@@ -164,10 +147,7 @@ class AppLocalizationDelegate extends LocalizationsDelegate<S> {
   const AppLocalizationDelegate();
 
   List<Locale> get supportedLocales {
-    return const <Locale>[
-      Locale.fromSubtags(languageCode: 'en'),
-      Locale.fromSubtags(languageCode: 'zh'),
-    ];
+    return const <Locale>[Locale.fromSubtags(languageCode: 'en'), Locale.fromSubtags(languageCode: 'zh')];
   }
 
   @override

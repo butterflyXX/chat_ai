@@ -30,6 +30,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
   String? _conversationId;
   bool _isUserScrolling = false;
   bool _isAtBottom = true;
+  String? _conversationTitle;
 
   @override
   void initState() {
@@ -37,6 +38,13 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     _conversationId = widget.conversationId;
     _loadHistory();
     _messageSubscription = aiService.stream.listen(_onStreamMessage);
+  }
+
+  Future<void> _loadConversationTitle(String message) async {
+    final title = await aiService.generateConversationTitle(message);
+    if (title == null) return;
+    setState(() => _conversationTitle = title);
+    await _chatRepo.updateConversationTitle(_conversationId!, title);
   }
 
   Future<void> _loadHistory() async {
@@ -62,8 +70,11 @@ class _ChatPageState extends ConsumerState<ChatPage> {
 
     if (message.role == AiMessageRole.user) {
       if (_conversationId == null) {
-        final title = _chatRepo.titleFromFirstMessage(message.message);
-        _conversationId = await _chatRepo.createConversation(aiServiceType: widget.aiServiceType, title: title);
+        _conversationId = await _chatRepo.createConversation(
+          aiServiceType: widget.aiServiceType,
+          title: message.message,
+        );
+        _loadConversationTitle(message.message);
         await _chatRepo.saveUserMessage(conversationId: _conversationId!, content: message.message);
       } else {
         await _chatRepo.saveUserMessage(conversationId: _conversationId!, content: message.message);
@@ -94,7 +105,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CAAppBar.commonAppbar(title: aiServiceType.displayName(context)),
+      appBar: CAAppBar.commonAppbar(title: _conversationTitle ?? S.of(context).newChat),
       body: Column(
         children: [
           Expanded(

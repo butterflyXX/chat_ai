@@ -42,19 +42,10 @@ class ChatRepository {
     return id;
   }
 
-  Future<void> saveUserMessage({
-    required String conversationId,
-    required String content,
-    String? titleIfNew,
-  }) async {
+  Future<void> saveUserMessage({required String conversationId, required String content, String? titleIfNew}) async {
     final now = DateTime.now();
     await _db.insertMessage(
-      ChatMessagesCompanion.insert(
-        conversationId: conversationId,
-        role: 'user',
-        content: content,
-        createdAt: now,
-      ),
+      ChatMessagesCompanion.insert(conversationId: conversationId, role: 'user', content: content, createdAt: now),
     );
     if (titleIfNew != null) {
       await _db.updateConversationTitleAndTime(conversationId, titleIfNew, now);
@@ -83,9 +74,9 @@ class ChatRepository {
 
   Future<void> deleteConversation(String id) => _db.deleteConversation(id);
 
-  String titleFromFirstMessage(String message) {
-    final trimmed = message.trim();
-    if (trimmed.isEmpty) return '新对话';
-    return trimmed.length > 24 ? '${trimmed.substring(0, 24)}…' : trimmed;
+  Future<void> updateConversationTitle(String conversationId, String title) async {
+    final trimmed = title.trim();
+    if (trimmed.isEmpty) return;
+    await _db.updateConversationTitleAndTime(conversationId, trimmed, DateTime.now());
   }
 }

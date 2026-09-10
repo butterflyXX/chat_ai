@@ -47,15 +47,15 @@ class AppDatabase extends _$AppDatabase {
   }
 
   Future<void> updateConversationTitleAndTime(String id, String title, DateTime updatedAt) {
-    return (update(conversations)..where((t) => t.id.equals(id))).write(
-      ConversationsCompanion(title: Value(title), updatedAt: Value(updatedAt)),
-    );
+    return (update(
+      conversations,
+    )..where((t) => t.id.equals(id))).write(ConversationsCompanion(title: Value(title), updatedAt: Value(updatedAt)));
   }
 
   Future<void> touchConversation(String id, DateTime updatedAt) {
-    return (update(conversations)..where((t) => t.id.equals(id))).write(
-      ConversationsCompanion(updatedAt: Value(updatedAt)),
-    );
+    return (update(
+      conversations,
+    )..where((t) => t.id.equals(id))).write(ConversationsCompanion(updatedAt: Value(updatedAt)));
   }
 
   Future<List<ChatMessage>> getMessages(String conversationId) {

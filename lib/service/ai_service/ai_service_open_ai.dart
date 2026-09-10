@@ -161,6 +161,33 @@ class AiServiceOpenAi extends AiServiceBase {
     }
   }
 
+  static const _titleSystemInstruction = '根据用户消息生成一句不超过20字的总结性标题。只输出标题本身，不要引号、不要解释。语言与用户一致。';
+
+  Future<String?> generateConversationTitle(String userMessage) async {
+    try {
+      final response = await _client.chat.completions.create(
+        ChatCompletionCreateRequest(
+          model: model,
+          messages: [ChatMessage.system(_titleSystemInstruction), ChatMessage.user(userMessage)],
+          temperature: 0.3,
+        ),
+      );
+      return _normalizeTitleLine(response.text);
+    } catch (e) {
+      LogUtil.d('会话标题生成失败: $e');
+      return null;
+    }
+  }
+
+  String? _normalizeTitleLine(String? raw) {
+    if (raw == null) return null;
+    for (final line in raw.split(RegExp(r'\r?\n'))) {
+      final trimmed = line.trim();
+      if (trimmed.isNotEmpty) return trimmed;
+    }
+    return null;
+  }
+
   @override
   Future<void> dispose() async {
     _client.close();
